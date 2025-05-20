@@ -1,0 +1,28 @@
+extends ../common/layout
+
+block content
+    .row 
+        .col
+            h1=title
+        .col.text-end.mt-2
+            a.btn.btn-primary(href="/users/create") Add New User
+    table.table
+        thead
+            tr
+                th Username
+                th Name
+                th Email
+                th Mobile
+                th Actions
+        tbody
+            each user in users
+                tr
+                    td=user.username
+                    td=user.name
+                    td=user.email
+                    td=user.mobile
+                    td
+                        .btn-group
+                            a.btn.btn-warning(href="/users/edit/"+user.id) Edit
+                            form.btn.btn-danger(action="/users/delete/"+user.id, method="post") 
+                                button.btn.btn-xs(type="submit") Delete

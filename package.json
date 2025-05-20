@@ -1,0 +1,32 @@
+{
+  "name": "class-10",
+  "version": "1.0.0",
+  "source": "src/bin/main.js",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "concurrently \"npm run watch\" \"npm run serve\"",
+    "watch": "parcel watch --no-source-maps",
+    "build": "copy-files-from-to --config deploy.json",
+    "serve": "nodemon dist/main.js",
+    "knex": "knex"
+  },
+  "keywords": [],
+  "author": "Shibaji Debnath",
+  "license": "ISC",
+  "description": "This is Server App",
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "copy-files-from-to": "^3.12.1",
+    "nodemon": "^3.1.9",
+    "parcel": "^2.14.4"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "http-errors": "^2.0.0",
+    "knex": "^3.1.0",
+    "mysql2": "^3.14.1",
+    "pug": "^3.0.3",
+    "sqlite3": "^5.1.7"
+  }
+}

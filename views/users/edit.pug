@@ -1,0 +1,27 @@
+extends ../common/layout
+
+block content
+    h1=title+' wds'
+    form(action="/users/update", method="post")
+        input(type="hidden", name="id", value=user.id)
+        .row
+            .col-md-6
+                h3 Login Info
+                .mb-3
+                    label(for="username") Username
+                    input#username.form-control(type="text", name="username" value=user.username)
+                .mb-3
+                    label(for="password") Password
+                    input#password.form-control(type="text", name="password" value=user.password)
+            .col-md-6
+                h3 User Info
+                .mb-3
+                    label(for="name") Name
+                    input#name.form-control(type="text", name="name" value=user.name)
+                .mb-3
+                    label(for="email") Email
+                    input#email.form-control(type="email", name="email" value=user.email)
+                .mb-3
+                    label(for="mobile") Mobile
+                    input#mobile.form-control(type="text", name="mobile" value=user.mobile)
+        input.btn.btn-success(type="submit", value="Update Now")
