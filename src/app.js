@@ -3,6 +3,7 @@ import express from 'express';
 // import indexRoutes from './routes/index';
 import FrontController from './controllers/FrontController';
 import UserController from './controllers/UserController';
+import api from './routes/api';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.static('public'));
 
 // Register Path
 app.use('/', new FrontController());
+app.use('/api', api);
 app.use('/users', new UserController());
 
 

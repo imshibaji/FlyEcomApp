@@ -44,21 +44,6 @@ class $5c59ea4c8355861e$export$2e2bcd8739ae039 {
 
 
 
-const $5f8b535a066df716$var$knex = $3PGwM$knex({
-    client: 'mysql2',
-    connection: {
-        host: '127.0.0.1',
-        port: 3306,
-        user: 'root',
-        password: 'password',
-        database: 'soumya'
-    },
-    debug: false
-});
-var $5f8b535a066df716$export$2e2bcd8739ae039 = $5f8b535a066df716$var$knex;
-
-
-
 // Update with your config settings.
 /**
  * @type { Object.<string, import("knex").Knex.Config> }
@@ -106,8 +91,8 @@ var $5f8b535a066df716$export$2e2bcd8739ae039 = $5f8b535a066df716$var$knex;
 };
 
 
-const $41154ef25a598a08$var$db = (0, ($parcel$interopDefault($3PGwM$knex)))((0, $8f83deb1b44cdde1$export$2e2bcd8739ae039).development);
-class $41154ef25a598a08$export$ef88aa0d34c34520 {
+const $720605a1bc090684$var$db = (0, ($parcel$interopDefault($3PGwM$knex)))((0, $8f83deb1b44cdde1$export$2e2bcd8739ae039).development);
+class $720605a1bc090684$export$d12e20a4eec10acf {
     constructor(table){
         this.table = table;
     }
@@ -115,31 +100,31 @@ class $41154ef25a598a08$export$ef88aa0d34c34520 {
         return this.table;
     }
     async all() {
-        return await $41154ef25a598a08$var$db(this.table).select('*');
+        return await $720605a1bc090684$var$db(this.table).select('*');
     }
     async find(id) {
-        return await $41154ef25a598a08$var$db(this.table).select('*').where('id', id).first();
+        return await $720605a1bc090684$var$db(this.table).select('*').where('id', id).first();
     }
     async create(data) {
-        return await $41154ef25a598a08$var$db(this.table).insert(data);
+        return await $720605a1bc090684$var$db(this.table).insert(data);
     }
     async update(id, data) {
         // remove id
         if (data.id) delete data.id;
-        return await $41154ef25a598a08$var$db(this.table).update(data).where('id', id);
+        return await $720605a1bc090684$var$db(this.table).update(data).where('id', id);
     }
     async delete(id) {
-        return await $41154ef25a598a08$var$db(this.table).where('id', id).del();
+        return await $720605a1bc090684$var$db(this.table).where('id', id).del();
     }
 }
 
 
-class $e79cae0f6706b914$export$1f44aaf2ec115b54 extends (0, $41154ef25a598a08$export$ef88aa0d34c34520) {
+class $e79cae0f6706b914$export$621c2e9225361608 extends (0, $720605a1bc090684$export$d12e20a4eec10acf) {
     constructor(){
         super('users');
     }
 }
-const $e79cae0f6706b914$export$ddb906a32562356c = new $e79cae0f6706b914$export$1f44aaf2ec115b54();
+const $e79cae0f6706b914$export$54582e7b17f0fab7 = new $e79cae0f6706b914$export$621c2e9225361608();
 
 
 class $1c16914251e6a9ba$export$2e2bcd8739ae039 {
@@ -154,7 +139,7 @@ class $1c16914251e6a9ba$export$2e2bcd8739ae039 {
         return route;
     }
     async list(req, res) {
-        const users = await (0, $e79cae0f6706b914$export$ddb906a32562356c).all();
+        const users = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).all();
         // const users = await db('users').select('*');
         res.render('users/list', {
             title: 'Users',
@@ -169,12 +154,12 @@ class $1c16914251e6a9ba$export$2e2bcd8739ae039 {
     async save(req, res) {
         const data = req.body;
         console.log(data);
-        const id = await (0, $e79cae0f6706b914$export$ddb906a32562356c).create(data);
+        const id = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).create(data);
         if (id) return res.redirect('/users');
         res.redirect('/users/create');
     }
     async edit(req, res) {
-        const data = await (0, $e79cae0f6706b914$export$ddb906a32562356c).find(req.params.id);
+        const data = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).find(req.params.id);
         // console.log(data);
         res.render('users/edit', {
             title: 'Edit User',
@@ -184,17 +169,63 @@ class $1c16914251e6a9ba$export$2e2bcd8739ae039 {
     async update(req, res) {
         const data = req.body;
         // const id = await db('users').update(user).where('id', user.id);
-        const id = await (0, $e79cae0f6706b914$export$ddb906a32562356c).update(data.id, data);
+        const id = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).update(data.id, data);
         if (id) return res.redirect('/users');
         res.redirect('/users/edit');
     }
     async delete(req, res) {
         // const id = await db('users').where('id', req.params.id).del();
-        const id = await (0, $e79cae0f6706b914$export$ddb906a32562356c).delete(req.params.id);
+        const id = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).delete(req.params.id);
         if (id) return res.redirect('/users');
         res.redirect('/users');
     }
 }
+
+
+
+
+
+class $0ffe09501c96f62c$export$8bd653a33461d337 {
+    constructor(){
+        const route = (0, $3PGwM$express.Router)();
+        route.get('/', this.list);
+        route.get('/:id', this.single);
+        route.post('/', this.save);
+        route.put('/update/:id', this.update);
+        route.delete('/:id', this.delete);
+        return route;
+    }
+    async list(req, res) {
+        const users = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).all();
+        res.json(users);
+    }
+    async single(req, res) {
+        const user = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).find(req.params.id);
+        res.json(user);
+    }
+    async save(req, res) {
+        const data = req.body;
+        const id = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).create(data);
+        if (id) return res.redirect('/users');
+        res.redirect('/users/create');
+    }
+    async update(req, res) {
+        const data = req.body;
+        const id = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).update(data.id, data);
+        if (id) return res.redirect('/users');
+        res.redirect('/users/edit');
+    }
+    async delete(req, res) {
+        const id = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).delete(req.params.id);
+        if (id) return res.redirect('/users');
+        res.redirect('/users');
+    }
+}
+
+
+const $be9e254f217a7a93$var$route = (0, $3PGwM$express.Router)();
+$be9e254f217a7a93$var$route.use('/users', new (0, $0ffe09501c96f62c$export$8bd653a33461d337)());
+var $be9e254f217a7a93$export$2e2bcd8739ae039 = $be9e254f217a7a93$var$route;
 
 
 const $298ad17b2ba72143$var$app = (0, ($parcel$interopDefault($3PGwM$express)))();
@@ -207,6 +238,7 @@ $298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$express))).urle
 $298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$express))).static('public'));
 // Register Path
 $298ad17b2ba72143$var$app.use('/', new (0, $5c59ea4c8355861e$export$2e2bcd8739ae039)());
+$298ad17b2ba72143$var$app.use('/api', (0, $be9e254f217a7a93$export$2e2bcd8739ae039));
 $298ad17b2ba72143$var$app.use('/users', new (0, $1c16914251e6a9ba$export$2e2bcd8739ae039)());
 // catch 404 and forward to error handler
 $298ad17b2ba72143$var$app.use(function(req, res, next) {
