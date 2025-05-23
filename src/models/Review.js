@@ -1,4 +1,4 @@
-import { BaseModel } from "./base";
+import { BaseModel } from "./Base";
 
 
 export class ReviewModel extends BaseModel {
@@ -6,3 +6,5 @@ export class ReviewModel extends BaseModel {
         super('reviews');
     }
 }
+
+export const reviewModel = new ReviewModel();

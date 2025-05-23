@@ -1,10 +1,10 @@
-import { BaseModel } from "./base";
+import { BaseModel } from "./Base";
 
 
 
 export class CartModel extends BaseModel {
     constructor() {
-        super('cart');
+        super('carts');
     }
 }
 

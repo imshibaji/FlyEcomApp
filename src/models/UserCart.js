@@ -1,4 +1,4 @@
-import { BaseModel } from "./base";
+import { BaseModel } from "./Base";
 
 
 export class UserCartModel extends BaseModel {
@@ -6,3 +6,5 @@ export class UserCartModel extends BaseModel {
         super('user_carts');
     }
 }
+
+export const userCartModel = new UserCartModel();
