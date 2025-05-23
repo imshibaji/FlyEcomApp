@@ -4,6 +4,7 @@ import express from 'express';
 import FrontController from './controllers/FrontController';
 import UserController from './controllers/UserController';
 import api from './routes/api';
+import admin from './routes/admin';
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.static('public'));
 
 // Register Path
 app.use('/', new FrontController());
+app.use('/admin', admin);
 app.use('/api', api);
 app.use('/users', new UserController());
 

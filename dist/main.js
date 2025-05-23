@@ -1061,6 +1061,29 @@ $be9e254f217a7a93$var$route.use('/user_wishlists', new (0, $b96e9e74c65bdcb9$exp
 var $be9e254f217a7a93$export$2e2bcd8739ae039 = $be9e254f217a7a93$var$route;
 
 
+
+const $4a244960c6409d39$var$route = (0, $3PGwM$express.Router)();
+$4a244960c6409d39$var$route.get('/', function(req, res) {
+    res.render('admin/index');
+});
+$4a244960c6409d39$var$route.get('/pages', function(req, res) {
+    res.render('admin/pages/index');
+});
+$4a244960c6409d39$var$route.get('/posts', function(req, res) {
+    res.render('admin/posts/index');
+});
+$4a244960c6409d39$var$route.get('/orders', function(req, res) {
+    res.render('admin/orders/index');
+});
+$4a244960c6409d39$var$route.get('/products', function(req, res) {
+    res.render('admin/products/index');
+});
+$4a244960c6409d39$var$route.get('/users', function(req, res) {
+    res.render('admin/users/index');
+});
+var $4a244960c6409d39$export$2e2bcd8739ae039 = $4a244960c6409d39$var$route;
+
+
 const $298ad17b2ba72143$var$app = (0, ($parcel$interopDefault($3PGwM$express)))();
 $298ad17b2ba72143$var$app.set('view engine', 'pug');
 $298ad17b2ba72143$var$app.set('views', 'views');
@@ -1071,6 +1094,7 @@ $298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$express))).urle
 $298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$express))).static('public'));
 // Register Path
 $298ad17b2ba72143$var$app.use('/', new (0, $5c59ea4c8355861e$export$2e2bcd8739ae039)());
+$298ad17b2ba72143$var$app.use('/admin', (0, $4a244960c6409d39$export$2e2bcd8739ae039));
 $298ad17b2ba72143$var$app.use('/api', (0, $be9e254f217a7a93$export$2e2bcd8739ae039));
 $298ad17b2ba72143$var$app.use('/users', new (0, $1c16914251e6a9ba$export$2e2bcd8739ae039)());
 // catch 404 and forward to error handler

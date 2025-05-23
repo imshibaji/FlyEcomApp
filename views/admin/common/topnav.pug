@@ -1,0 +1,36 @@
+nav.navbar.navbar-expand-lg.bg-body-tertiary
+  .container
+    a.navbar-brand(href='/')
+        img(src="/imgs/bird_2.png", width="32px")
+        |  FlyApp
+    button.navbar-toggler(type='button' data-bs-toggle='collapse' data-bs-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation')
+      span.navbar-toggler-icon
+    #navbarSupportedContent.collapse.navbar-collapse
+      ul.navbar-nav.mb-2.mb-lg-0
+        li.nav-item
+          a.nav-link.active(aria-current='page' href='/admin/') Dashboard
+        li.nav-item
+          a.nav-link(href='/admin/orders') Orders
+        li.nav-item
+          a.nav-link(href='/admin/products') Products
+        li.nav-item
+          a.nav-link(href='/admin/users') Users
+      form.input-group.w-50.ms-4.d-flex(role='search')
+        input.form-control.w-full(type='search' placeholder='Search' aria-label='Search')
+        button.btn.btn-outline-success(type='submit') Search
+      ul.navbar-nav.ms-auto.mb-2.mb-lg-0
+        li.nav-item
+          a.nav-link(href='/admin/notifications')
+            i.bi.bi-bell  Notifications
+        li.nav-item.dropdown
+          a.nav-link.dropdown-toggle(href='#' role='button' data-bs-toggle='dropdown' aria-expanded='false')
+            i.bi.bi-person-circle  User
+          ul.dropdown-menu.dropdown-menu-end
+            li
+              a.dropdown-item(href='#') Settings
+            li
+              a.dropdown-item(href='#') Change Password
+            li
+              hr.dropdown-divider
+            li
+              a.dropdown-item(href='#') Logout
