@@ -1,4 +1,5 @@
 import { Router } from "express";
+import UserController from "../controllers/admin/UserController";
 
 const route = Router();
 
@@ -17,8 +18,6 @@ route.get('/orders', function(req, res){
 route.get('/products', function(req, res){
     res.render('admin/products/index');
 });
-route.get('/users', function(req, res){
-    res.render('admin/users/index');
-});
+route.use('/users', new UserController());
 
 export default route;

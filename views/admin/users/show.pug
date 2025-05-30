@@ -1,0 +1,10 @@
+extends ../common/layout
+
+block content
+    .row
+        .col
+            h1 User Details
+        .col.text-end
+            a.btn.btn-warning(href="/admin/users/edit/"+user.id) Edit User
+    h3 Name: #{user.name}, 
+    h4 Email: #{user.email}, Mobile: #{user.mobile} 

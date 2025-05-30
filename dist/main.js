@@ -1062,6 +1062,69 @@ var $be9e254f217a7a93$export$2e2bcd8739ae039 = $be9e254f217a7a93$var$route;
 
 
 
+
+
+class $8a3073f4302cde34$export$2e2bcd8739ae039 {
+    constructor(){
+        const route = (0, $3PGwM$express.Router)();
+        route.get('/', this.list);
+        route.get('/show/:id', this.show);
+        route.get('/create', this.create);
+        route.post('/', this.save);
+        route.get('/edit/:id', this.edit);
+        route.post('/update', this.update);
+        route.post('/delete/:id', this.delete);
+        return route;
+    }
+    async list(req, res) {
+        const users = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).all();
+        res.render('admin/users/index', {
+            users: users,
+            title: 'Users Section'
+        });
+    }
+    async show(req, res) {
+        const user = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).find(req.params.id);
+        res.render('admin/users/show', {
+            user: user,
+            title: 'User Details'
+        });
+    }
+    async create(req, res) {
+        res.render('admin/users/create', {
+            title: 'Create User'
+        });
+    }
+    async save(req, res) {
+        const user = req.body;
+        const img = req.file;
+        console.log(img);
+        delete user.image;
+        await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).create(user);
+        res.redirect('/admin/users');
+    }
+    async edit(req, res) {
+        const user = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).find(req.params.id);
+        res.render('admin/users/edit', {
+            user: user,
+            title: 'Edit User'
+        });
+    }
+    async update(req, res) {
+        const user = req.body;
+        const img = req.file;
+        console.log(img);
+        delete user.image;
+        await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).update(user.id, user);
+        res.redirect('/admin/users');
+    }
+    async delete(req, res) {
+        await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).delete(req.params.id);
+        res.redirect('/admin/users');
+    }
+}
+
+
 const $4a244960c6409d39$var$route = (0, $3PGwM$express.Router)();
 $4a244960c6409d39$var$route.get('/', function(req, res) {
     res.render('admin/index');
@@ -1078,9 +1141,7 @@ $4a244960c6409d39$var$route.get('/orders', function(req, res) {
 $4a244960c6409d39$var$route.get('/products', function(req, res) {
     res.render('admin/products/index');
 });
-$4a244960c6409d39$var$route.get('/users', function(req, res) {
-    res.render('admin/users/index');
-});
+$4a244960c6409d39$var$route.use('/users', new (0, $8a3073f4302cde34$export$2e2bcd8739ae039)());
 var $4a244960c6409d39$export$2e2bcd8739ae039 = $4a244960c6409d39$var$route;
 
 
