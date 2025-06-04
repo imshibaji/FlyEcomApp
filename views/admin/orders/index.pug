@@ -1,4 +1,28 @@
 extends ../common/layout
 
 block content
-    h1 Orders Area
+    .row
+        .col
+            h1 Admin Orders Area
+        .col.text-end
+            a.btn.btn-primary(href='/admin/orders/create') Add A Order
+    table.table
+        thead
+            tr
+                th Order Id
+                th Product
+                th User Id
+                th Quantity 
+                th actions
+        tbody
+            each order in orders
+                tr
+                   
+                
+                 
+                    td
+                        .btn-group
+                            a.btn.btn-info.p-3(href='/admin/orders/show/'+order.id) Show
+                            a.btn.btn-warning.p-3(href='/admin/orders/edit/'+order.id) Edit
+                            form.btn.btn-danger(action='/admin/orders/delete/'+order.id, method="post") 
+                                button.btn.btn-none(type='submit') Delete
