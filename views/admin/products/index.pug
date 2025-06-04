@@ -1,4 +1,35 @@
 extends ../common/layout
 
 block content
-    h1 Products Area
+    .row
+        .col
+            h1 Admin Products Area
+        .col.text-end
+            a.btn.btn-primary(href='/admin/products/create') Add A Product
+    table.table
+        thead
+            tr
+                th name
+                th description 
+                th price
+                th image
+                th status 
+                th stock 
+                th category
+                th actions
+        tbody
+            each product in products
+                tr
+                    td=product.image
+                    td=product.name
+                    td=product.description
+                    td=product.price
+                    td=product.status
+                    td=product.stock 
+                    td=product.category
+                    td
+                        .btn-group
+                            a.btn.btn-info.p-3(href='/admin/products/show/'+product.id) Show
+                            a.btn.btn-warning.p-3(href='/admin/products/edit/'+product.id) Edit
+                            form.btn.btn-danger(action='/admin/products/delete/'+product.id, method="post") 
+                                button.btn.btn-none(type='submit') Delete

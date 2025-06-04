@@ -1,0 +1,35 @@
+extends ../common/layout
+
+block content
+    h1 Add a product
+    form(action="/admin/products", method="post" enctype="multipart/form-data") 
+        .row
+            .col-md-6
+              
+                .mb-3
+                    label(for="name") Name
+                    input#name.form-control(type="text", name="name")
+                .mb-3
+                    label(for="description") Description
+                    input#description.form-control(type="text", name="description")
+                .mb-3
+                    label(for="category") Category
+                    input#category.form-control(type="text", name="category")
+                .mb-3
+                    label(for="image") Image
+                    input#image.form-control(type="file", name="image")
+
+            .col-md-6
+                
+                .mb-3
+                    label(for="price") Price
+                    input#price.form-control(type="text", name="price")
+                .mb-3
+                    label(for="status") Status
+                    input#status.form-control(type="text", name="status")
+                .mb-3
+                    label(for="stock") Stock
+                    input#stock.form-control(type="number", name="stock" min="0")
+                
+               
+        input.btn.btn-success(type="submit", value="Submit Now")

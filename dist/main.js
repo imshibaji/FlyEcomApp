@@ -1188,6 +1188,71 @@ class $2daee833097940d0$export$2e2bcd8739ae039 {
 }
 
 
+
+
+class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
+    constructor(){
+        const route = (0, $3PGwM$express.Router)();
+        route.get('/', this.list);
+        route.get('/show/:id', this.show);
+        route.get('/create', this.create);
+        route.post('/', this.save);
+        route.get('/edit/:id', this.edit);
+        route.post('/update', this.update);
+        route.post('/delete/:id', this.delete);
+        return route;
+    }
+    async list(req, res) {
+        const products = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).all();
+        res.render('admin/products/index', {
+            products: products,
+            title: 'Products Section'
+        });
+    }
+    async show(req, res) {
+        const product = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.params.id);
+        res.render('admin/products/show', {
+            product: product,
+            title: 'Product Details'
+        });
+    }
+    async create(req, res) {
+        res.render('admin/products/create', {
+            title: 'Create product'
+        });
+    }
+    async save(req, res) {
+        const product = req.body;
+        const img = req.file;
+        console.log(product);
+        console.log(img);
+        // delete product.image;/
+        // product.image ='';
+        await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).create(product);
+        res.redirect('/admin/products');
+    }
+    async edit(req, res) {
+        const product = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.params.id);
+        res.render('admin/orders/edit', {
+            product: product,
+            title: 'Edit Product'
+        });
+    }
+    async update(req, res) {
+        const product = req.body;
+        const img = req.file;
+        console.log(img);
+        delete product.image;
+        await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).update(product.id, product);
+        res.redirect('/admin/products');
+    }
+    async delete(req, res) {
+        await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).delete(req.params.id);
+        res.redirect('/admin/products');
+    }
+}
+
+
 const $4a244960c6409d39$var$route = (0, $3PGwM$express.Router)();
 $4a244960c6409d39$var$route.get('/', function(req, res) {
     res.render('admin/index');
@@ -1198,9 +1263,7 @@ $4a244960c6409d39$var$route.get('/pages', function(req, res) {
 $4a244960c6409d39$var$route.get('/posts', function(req, res) {
     res.render('admin/posts/index');
 });
-$4a244960c6409d39$var$route.get('/products', function(req, res) {
-    res.render('admin/products/index');
-});
+$4a244960c6409d39$var$route.use('/products', new (0, $dbcf8bf34f1387b5$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/orders', new (0, $2daee833097940d0$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/users', new (0, $8a3073f4302cde34$export$2e2bcd8739ae039)());
 var $4a244960c6409d39$export$2e2bcd8739ae039 = $4a244960c6409d39$var$route;
