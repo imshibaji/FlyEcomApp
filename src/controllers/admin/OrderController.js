@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { orderModel } from "../../models/Order.js";
-export default class UserController{
+export default class OrderController{
     constructor(){
         const route = Router();
         route.get('/', this.list);

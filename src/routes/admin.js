@@ -1,5 +1,6 @@
 import { Router } from "express";
 import UserController from "../controllers/admin/UserController";
+import OrderController from "../controllers/admin/OrderController";
 
 const route = Router();
 
@@ -12,12 +13,11 @@ route.get('/pages', function(req, res){
 route.get('/posts', function(req, res){
     res.render('admin/posts/index');
 });
-route.get('/orders', function(req, res){
-    res.render('admin/orders/index');
-});
+
 route.get('/products', function(req, res){
     res.render('admin/products/index');
 });
+route.use('/orders', new OrderController());
 route.use('/users', new UserController());
 
 export default route;
