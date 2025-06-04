@@ -1,6 +1,7 @@
 var $3PGwM$httperrors = require("http-errors");
 var $3PGwM$express = require("express");
 var $3PGwM$knex = require("knex");
+var $3PGwM$multer = require("multer");
 
 
 function $parcel$interopDefault(a) {
@@ -1190,13 +1191,17 @@ class $2daee833097940d0$export$2e2bcd8739ae039 {
 
 
 
+
+const $dbcf8bf34f1387b5$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
+    dest: 'uploads/'
+});
 class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
     constructor(){
         const route = (0, $3PGwM$express.Router)();
         route.get('/', this.list);
         route.get('/show/:id', this.show);
         route.get('/create', this.create);
-        route.post('/', this.save);
+        route.post('/', $dbcf8bf34f1387b5$var$upload.single('image'), this.save);
         route.get('/edit/:id', this.edit);
         route.post('/update', this.update);
         route.post('/delete/:id', this.delete);
@@ -1223,9 +1228,7 @@ class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
     }
     async save(req, res) {
         const product = req.body;
-        const img = req.file;
-        console.log(product);
-        console.log(img);
+        // console.log(product);
         // delete product.image;/
         // product.image ='';
         await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).create(product);

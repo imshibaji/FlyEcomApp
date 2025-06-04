@@ -1,12 +1,15 @@
+import multer from "multer";
 import { Router } from "express";
 import { productModel } from "../../models/Product.js";
+const upload = multer({ dest: 'uploads/' });
+
 export default class ProductController{
     constructor(){
         const route = Router();
         route.get('/', this.list);
         route.get('/show/:id', this.show);
         route.get('/create', this.create);
-        route.post('/', this.save);
+        route.post('/', upload.single('image'), this.save);
         route.get('/edit/:id', this.edit);
         route.post('/update', this.update);
         route.post('/delete/:id', this.delete);
@@ -29,9 +32,7 @@ export default class ProductController{
 
     async save(req, res){
         const product = req.body;
-        const img = req.file;
-        console.log(product);
-        console.log(img);
+        // console.log(product);
         
         // delete product.image;/
         // product.image ='';

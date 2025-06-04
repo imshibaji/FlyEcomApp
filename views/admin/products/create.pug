@@ -14,7 +14,9 @@ block content
                     input#description.form-control(type="text", name="description")
                 .mb-3
                     label(for="category") Category
-                    input#category.form-control(type="text", name="category")
+                    select#category.form-select(name="category_id")
+                        option(value="1") Test
+                        option(value="2") Test 2  
                 .mb-3
                     label(for="image") Image
                     input#image.form-control(type="file", name="image")
@@ -26,7 +28,9 @@ block content
                     input#price.form-control(type="text", name="price")
                 .mb-3
                     label(for="status") Status
-                    input#status.form-control(type="text", name="status")
+                    select#status.form-select(name="status")
+                        option(value="active") Active
+                        option(value="inactive") Inactive
                 .mb-3
                     label(for="stock") Stock
                     input#stock.form-control(type="number", name="stock" min="0")
