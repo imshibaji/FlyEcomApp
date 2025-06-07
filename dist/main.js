@@ -2,6 +2,7 @@ var $3PGwM$httperrors = require("http-errors");
 var $3PGwM$express = require("express");
 var $3PGwM$knex = require("knex");
 var $3PGwM$multer = require("multer");
+var $3PGwM$fs = require("fs");
 
 
 function $parcel$interopDefault(a) {
@@ -1192,8 +1193,9 @@ class $2daee833097940d0$export$2e2bcd8739ae039 {
 
 
 
+
 const $dbcf8bf34f1387b5$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
-    dest: 'uploads/'
+    dest: 'public/uploads/'
 });
 class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
     constructor(){
@@ -1203,7 +1205,7 @@ class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
         route.get('/create', this.create);
         route.post('/', $dbcf8bf34f1387b5$var$upload.single('image'), this.save);
         route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
+        route.post('/update', $dbcf8bf34f1387b5$var$upload.single('image'), this.update);
         route.post('/delete/:id', this.delete);
         return route;
     }
@@ -1230,13 +1232,13 @@ class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
         const product = req.body;
         // console.log(product);
         // delete product.image;/
-        // product.image ='';
+        if (req.file) product.image = req.file.filename;
         await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).create(product);
         res.redirect('/admin/products');
     }
     async edit(req, res) {
         const product = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.params.id);
-        res.render('admin/orders/edit', {
+        res.render('admin/products/edit', {
             product: product,
             title: 'Edit Product'
         });
@@ -1244,12 +1246,17 @@ class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
     async update(req, res) {
         const product = req.body;
         const img = req.file;
-        console.log(img);
-        delete product.image;
+        if (img) {
+            const productData = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.body.id);
+            if (productData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + productData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + productData.image);
+            product.image = img.filename;
+        }
         await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).update(product.id, product);
         res.redirect('/admin/products');
     }
     async delete(req, res) {
+        const productData = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.params.id);
+        if (productData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + productData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + productData.image);
         await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).delete(req.params.id);
         res.redirect('/admin/products');
     }

@@ -1,0 +1,44 @@
+extends ../common/layout
+
+block content
+    h1 Add a product
+    form(action="/admin/products/update", method="post" enctype="multipart/form-data")
+        input(type="hidden", name="id", value=product.id) 
+        .row
+            .col-md-6
+              
+                .mb-3
+                    label(for="name") Name
+                    input#name.form-control(type="text", name="name", value=product.name)
+                .mb-3
+                    label(for="description") Description
+                    input#description.form-control(type="text", name="description", value=product.description)
+                .mb-3
+                    label(for="category") Category
+                    select#category.form-select(name="category_id")
+                        option(value="1" , selected=(product.category_id == 1)) Test
+                        option(value="2", selected=(product.category_id == 2)) Test 2  
+                .mb-3
+                    .row
+                        .col.text-center
+                            img(src="/uploads/"+product.image, height="50px")
+                        .col
+                            label(for="image") Image
+                            input#image.form-control(type="file", name="image")
+
+            .col-md-6
+                
+                .mb-3
+                    label(for="price") Price
+                    input#price.form-control(type="text", name="price", value=product.price)
+                .mb-3
+                    label(for="status") Status
+                    select#status.form-select(name="status")
+                        option(value="active", selected=(product.status == 'active')) Active
+                        option(value="inactive", selected=(product.status == 'inactive')) Inactive
+                .mb-3
+                    label(for="stock") Stock
+                    input#stock.form-control(type="number", name="stock" value=product.stock)
+                
+               
+        input.btn.btn-success(type="submit", value="Submit Now")

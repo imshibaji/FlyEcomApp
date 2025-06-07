@@ -20,7 +20,8 @@ block content
         tbody
             each product in products
                 tr
-                    td=product.image
+                    td 
+                        img(src="/uploads/"+product.image, height="60px")
                     td=product.name
                     td=product.description
                     td=product.price

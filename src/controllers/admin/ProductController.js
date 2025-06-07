@@ -1,7 +1,8 @@
 import multer from "multer";
 import { Router } from "express";
 import { productModel } from "../../models/Product.js";
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: 'public/uploads/' });
+import fs from 'fs';
 
 export default class ProductController{
     constructor(){
@@ -11,7 +12,7 @@ export default class ProductController{
         route.get('/create', this.create);
         route.post('/', upload.single('image'), this.save);
         route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
+        route.post('/update', upload.single('image'),this.update);
         route.post('/delete/:id', this.delete);
         return route;
     }
@@ -35,26 +36,37 @@ export default class ProductController{
         // console.log(product);
         
         // delete product.image;/
-        // product.image ='';
+        if(req.file){
+            product.image = req.file.filename;
+        }
         await productModel.create(product);
         res.redirect('/admin/products');
     }
 
     async edit(req, res){
         const product = await productModel.find(req.params.id);
-        res.render('admin/orders/edit', {product, title: 'Edit Product'});
+        res.render('admin/products/edit', {product, title: 'Edit Product'});
     }
 
     async update(req, res){
         const product = req.body;
         const img = req.file;
-        console.log(img);
-        delete product.image;
+        if(img){
+            const productData = await productModel.find(req.body.id);
+            if(productData.image && fs.existsSync('public/uploads/' + productData.image)){
+                fs.unlinkSync('public/uploads/' + productData.image);
+            }
+            product.image = img.filename;
+        }
         await productModel.update(product.id, product);
         res.redirect('/admin/products');
     }
 
     async delete(req, res){
+        const productData = await productModel.find(req.params.id);
+        if(productData.image && fs.existsSync('public/uploads/' + productData.image)){
+            fs.unlinkSync('public/uploads/' + productData.image);
+        }
         await productModel.delete(req.params.id);
         res.redirect('/admin/products');
     }
