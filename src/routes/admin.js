@@ -2,6 +2,8 @@ import { Router } from "express";
 import UserController from "../controllers/admin/UserController";
 import OrderController from "../controllers/admin/OrderController";
 import ProductController from "../controllers/admin/ProductController";
+import CategoryController from "../controllers/admin/CategoryController";
+import MenuController from "../controllers/admin/MenuController";
 
 const route = Router();
 
@@ -14,7 +16,8 @@ route.get('/pages', function(req, res){
 route.get('/posts', function(req, res){
     res.render('admin/posts/index');
 });
-
+route.use('/menu', new MenuController());
+route.use('/categories', new CategoryController());
 route.use('/products', new ProductController());
 route.use('/orders', new OrderController());
 route.use('/users', new UserController());
