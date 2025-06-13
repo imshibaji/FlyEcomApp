@@ -1,18 +1,7 @@
-import { Router } from "express";
 import { categoryModel } from "../../models/Category";
+import { BaseController } from "./BaseController";
 
-export default class CategoryController{
-    constructor(){
-        const route = Router();
-        route.get('/', this.list);
-        route.get('/show/:id', this.show);
-        route.get('/create', this.create);
-        route.post('/', this.save);
-        route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
-        route.post('/delete/:id', this.delete);
-        return route;
-    }
+export default class CategoryController extends BaseController{
 
     async list(req, res){
         const categories = await categoryModel.all();

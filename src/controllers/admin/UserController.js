@@ -1,17 +1,18 @@
 import { Router } from "express";
 import { userModel } from "../../models/User.js";
-export default class UserController{
-    constructor(){
-        const route = Router();
-        route.get('/', this.list);
-        route.get('/show/:id', this.show);
-        route.get('/create', this.create);
-        route.post('/', this.save);
-        route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
-        route.post('/delete/:id', this.delete);
-        return route;
-    }
+import { BaseController } from "./BaseController.js";
+export default class UserController extends BaseController{
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/show/:id', this.show);
+    //     route.get('/create', this.create);
+    //     route.post('/', this.save);
+    //     route.get('/edit/:id', this.edit);
+    //     route.post('/update', this.update);
+    //     route.post('/delete/:id', this.delete);
+    //     return route;
+    // }
 
     async list(req, res){
         const users = await userModel.all();

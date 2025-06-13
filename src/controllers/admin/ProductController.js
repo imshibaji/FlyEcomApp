@@ -1,21 +1,19 @@
-import multer from "multer";
-import { Router } from "express";
 import { productModel } from "../../models/Product.js";
-const upload = multer({ dest: 'public/uploads/' });
 import fs from 'fs';
+import { BaseController } from "./BaseController.js";
 
-export default class ProductController{
-    constructor(){
-        const route = Router();
-        route.get('/', this.list);
-        route.get('/show/:id', this.show);
-        route.get('/create', this.create);
-        route.post('/', upload.single('image'), this.save);
-        route.get('/edit/:id', this.edit);
-        route.post('/update', upload.single('image'),this.update);
-        route.post('/delete/:id', this.delete);
-        return route;
-    }
+export default class ProductController extends BaseController{
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/show/:id', this.show);
+    //     route.get('/create', this.create);
+    //     route.post('/', upload.single('image'), this.save);
+    //     route.get('/edit/:id', this.edit);
+    //     route.post('/update', upload.single('image'),this.update);
+    //     route.post('/delete/:id', this.delete);
+    //     return route;
+    // }
 
     async list(req, res){
         const products = await productModel.all();

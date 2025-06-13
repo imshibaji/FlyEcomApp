@@ -4,6 +4,7 @@ import OrderController from "../controllers/admin/OrderController";
 import ProductController from "../controllers/admin/ProductController";
 import CategoryController from "../controllers/admin/CategoryController";
 import MenuController from "../controllers/admin/MenuController";
+import SettingController from "../controllers/admin/SettingController";
 
 const route = Router();
 
@@ -21,5 +22,6 @@ route.use('/categories', new CategoryController());
 route.use('/products', new ProductController());
 route.use('/orders', new OrderController());
 route.use('/users', new UserController());
+route.use('/settings', new SettingController());
 
 export default route;

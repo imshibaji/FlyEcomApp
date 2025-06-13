@@ -1066,18 +1066,45 @@ var $be9e254f217a7a93$export$2e2bcd8739ae039 = $be9e254f217a7a93$var$route;
 
 
 
-class $8a3073f4302cde34$export$2e2bcd8739ae039 {
-    constructor(){
+
+
+const $0a13916f247d137d$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
+    dest: 'public/uploads/'
+});
+class $0a13916f247d137d$export$3b5bd9381a52554c {
+    constructor(fileName = 'image'){
         const route = (0, $3PGwM$express.Router)();
         route.get('/', this.list);
         route.get('/show/:id', this.show);
         route.get('/create', this.create);
-        route.post('/', this.save);
+        route.post('/', $0a13916f247d137d$var$upload.single(fileName), this.save);
         route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
+        route.post('/update', $0a13916f247d137d$var$upload.single(fileName), this.update);
         route.post('/delete/:id', this.delete);
         return route;
     }
+    async list() {}
+    async show() {}
+    async create() {}
+    async save() {}
+    async edit() {}
+    async update() {}
+    async delete() {}
+}
+
+
+class $8a3073f4302cde34$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/show/:id', this.show);
+    //     route.get('/create', this.create);
+    //     route.post('/', this.save);
+    //     route.get('/edit/:id', this.edit);
+    //     route.post('/update', this.update);
+    //     route.post('/delete/:id', this.delete);
+    //     return route;
+    // }
     async list(req, res) {
         const users = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).all();
         res.render('admin/users/index', {
@@ -1129,18 +1156,18 @@ class $8a3073f4302cde34$export$2e2bcd8739ae039 {
 
 
 
-class $2daee833097940d0$export$2e2bcd8739ae039 {
-    constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/show/:id', this.show);
-        route.get('/create', this.create);
-        route.post('/', this.save);
-        route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
-        route.post('/delete/:id', this.delete);
-        return route;
-    }
+class $2daee833097940d0$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/show/:id', this.show);
+    //     route.get('/create', this.create);
+    //     route.post('/', this.save);
+    //     route.get('/edit/:id', this.edit);
+    //     route.post('/update', this.update);
+    //     route.post('/delete/:id', this.delete);
+    //     return route;
+    // }
     async list(req, res) {
         const orders = await (0, $ddfcbe5356107152$export$bbc4da2410d90f08).all();
         res.render('admin/orders/index', {
@@ -1193,22 +1220,18 @@ class $2daee833097940d0$export$2e2bcd8739ae039 {
 
 
 
-
-const $dbcf8bf34f1387b5$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
-    dest: 'public/uploads/'
-});
-class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
-    constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/show/:id', this.show);
-        route.get('/create', this.create);
-        route.post('/', $dbcf8bf34f1387b5$var$upload.single('image'), this.save);
-        route.get('/edit/:id', this.edit);
-        route.post('/update', $dbcf8bf34f1387b5$var$upload.single('image'), this.update);
-        route.post('/delete/:id', this.delete);
-        return route;
-    }
+class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/show/:id', this.show);
+    //     route.get('/create', this.create);
+    //     route.post('/', upload.single('image'), this.save);
+    //     route.get('/edit/:id', this.edit);
+    //     route.post('/update', upload.single('image'),this.update);
+    //     route.post('/delete/:id', this.delete);
+    //     return route;
+    // }
     async list(req, res) {
         const products = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).all();
         res.render('admin/products/index', {
@@ -1265,73 +1288,144 @@ class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 {
 
 
 
-
-
-const $25551fd63e04c47d$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
-    dest: 'public/uploads/'
-});
-class $25551fd63e04c47d$export$2e2bcd8739ae039 {
-    constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/show/:id', this.show);
-        route.get('/create', this.create);
-        route.post('/', this.save);
-        route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
-        route.post('/delete/:id', this.delete);
-        return route;
-    }
+class $25551fd63e04c47d$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
     async list(req, res) {
-        const products = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).all();
+        const categories = await (0, $c3cc1681a3def845$export$a2705413a9011472).all();
         res.render('admin/categories/index', {
-            products: products,
-            title: 'Products Section'
+            categories: categories,
+            title: 'Categories Section'
         });
     }
     async show(req, res) {
-        const product = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.params.id);
+        const category = await (0, $c3cc1681a3def845$export$a2705413a9011472).find(req.params.id);
         res.render('admin/categories/show', {
-            product: product,
-            title: 'Product Details'
+            category: category,
+            title: 'Category Details'
         });
     }
     async create(req, res) {
         res.render('admin/categories/create', {
-            title: 'Create product'
+            title: 'Create category'
         });
     }
     async save(req, res) {
         const product = req.body;
-        // console.log(product);
-        // delete product.image;/
-        if (req.file) product.image = req.file.filename;
-        await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).create(product);
+        await (0, $c3cc1681a3def845$export$a2705413a9011472).create(product);
         res.redirect('/admin/categories');
     }
     async edit(req, res) {
-        const product = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.params.id);
+        const category = await (0, $c3cc1681a3def845$export$a2705413a9011472).find(req.params.id);
         res.render('admin/categories/edit', {
-            product: product,
-            title: 'Edit Product'
+            category: category,
+            title: 'Edit Category'
         });
     }
     async update(req, res) {
-        const product = req.body;
-        const img = req.file;
-        if (img) {
-            const productData = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.body.id);
-            if (productData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + productData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + productData.image);
-            product.image = img.filename;
-        }
-        await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).update(product.id, product);
+        const category = req.body;
+        await (0, $c3cc1681a3def845$export$a2705413a9011472).update(category.id, category);
         res.redirect('/admin/categories');
     }
     async delete(req, res) {
-        const productData = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).find(req.params.id);
-        if (productData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + productData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + productData.image);
-        await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).delete(req.params.id);
+        await (0, $c3cc1681a3def845$export$a2705413a9011472).delete(req.params.id);
         res.redirect('/admin/categories');
+    }
+}
+
+
+
+
+class $db715ed7f7b3e677$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/show/:id', this.show);
+    //     route.get('/create', this.create);
+    //     route.post('/', this.save);
+    //     route.get('/edit/:id', this.edit);
+    //     route.post('/update', this.update);
+    //     route.post('/delete/:id', this.delete);
+    //     return route;
+    // }
+    async list(req, res) {
+        const menus = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).all();
+        res.render('admin/menus/index', {
+            menus: menus,
+            title: 'Menus Section'
+        });
+    }
+    async show(req, res) {
+        const menu = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).find(req.params.id);
+        res.render('admin/menus/show', {
+            menu: menu,
+            title: 'Menu Details'
+        });
+    }
+    async create(req, res) {
+        res.render('admin/menus/create', {
+            title: 'Create Menu'
+        });
+    }
+    async save(req, res) {
+        const menu = req.body;
+        await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).create(menu);
+        res.redirect('/admin/menus');
+    }
+    async edit(req, res) {
+        const menu = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).find(req.params.id);
+        res.render('admin/menus/edit', {
+            menu: menu,
+            title: 'Edit Menu'
+        });
+    }
+    async update(req, res) {
+        const menu = req.body;
+        await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).update(menu.id, menu);
+        res.redirect('/admin/menus');
+    }
+    async delete(req, res) {
+        await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).delete(req.params.id);
+        res.redirect('/admin/menus');
+    }
+}
+
+
+
+
+class $ef023f9b523d0dc7$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.index);
+    //     route.post('/', this.save);
+    //     route.get('/edit', this.edit);
+    //     route.post('/update', this.update);
+    //     route.post('/delete', this.delete);
+    //     return route;
+    // }
+    async list(req, res) {
+        res.render('admin/settings/index', {
+            title: 'Setting',
+            settings: await (0, $ffc8de37daf0e3ba$export$c02d22b8d9fe1446).all()
+        });
+    }
+    save(req, res) {
+        res.render('admin/settings/index', {
+            title: 'Setting'
+        });
+    }
+    edit(req, res) {
+        res.render('admin/settings/index', {
+            title: 'Setting Edit'
+        });
+    }
+    update(req, res) {
+        res.render('admin/settings/index', {
+            title: 'Setting Edit'
+        });
+    }
+    delete(req, res) {
+        res.render('admin/settings/index', {
+            title: 'Setting Delete'
+        });
     }
 }
 
@@ -1346,10 +1440,12 @@ $4a244960c6409d39$var$route.get('/pages', function(req, res) {
 $4a244960c6409d39$var$route.get('/posts', function(req, res) {
     res.render('admin/posts/index');
 });
+$4a244960c6409d39$var$route.use('/menu', new (0, $db715ed7f7b3e677$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/categories', new (0, $25551fd63e04c47d$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/products', new (0, $dbcf8bf34f1387b5$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/orders', new (0, $2daee833097940d0$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/users', new (0, $8a3073f4302cde34$export$2e2bcd8739ae039)());
+$4a244960c6409d39$var$route.use('/settings', new (0, $ef023f9b523d0dc7$export$2e2bcd8739ae039)());
 var $4a244960c6409d39$export$2e2bcd8739ae039 = $4a244960c6409d39$var$route;
 
 

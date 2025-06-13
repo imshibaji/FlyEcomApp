@@ -1,17 +1,17 @@
-import { Router } from "express";
 import { orderModel } from "../../models/Order.js";
-export default class OrderController{
-    constructor(){
-        const route = Router();
-        route.get('/', this.list);
-        route.get('/show/:id', this.show);
-        route.get('/create', this.create);
-        route.post('/', this.save);
-        route.get('/edit/:id', this.edit);
-        route.post('/update', this.update);
-        route.post('/delete/:id', this.delete);
-        return route;
-    }
+import { BaseController } from "./BaseController.js";
+export default class OrderController extends BaseController{
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/show/:id', this.show);
+    //     route.get('/create', this.create);
+    //     route.post('/', this.save);
+    //     route.get('/edit/:id', this.edit);
+    //     route.post('/update', this.update);
+    //     route.post('/delete/:id', this.delete);
+    //     return route;
+    // }
 
     async list(req, res){
         const orders = await orderModel.all();
