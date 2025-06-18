@@ -2,20 +2,33 @@ import { Router } from "express";
 import multer from "multer";
 import fs from 'fs';
 const upload = multer({ dest: 'public/uploads/' });
-let model = 'users';
 export class BaseApiController {
-    constructor(model,fileName='image'){
-        this.model = require(`../../models/${model}`)('users');
+    constructor(modelObject,fileName='image'){
         const route = Router();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/',upload.single(fileName), this.save);
-        route.put('/update/:id',upload.single(fileName), this.update);
-        route.delete('/:id', this.delete);
+        route.get('/', (req, res, next)=>{
+            this.model = modelObject;
+            this.list(req, res, next);
+        });
+        route.get('/:id', (req, res, next)=>{
+            this.model = modelObject;
+            this.single(req, res, next);
+        });
+        route.post('/',upload.single(fileName), (req, res, next)=>{
+            this.model = modelObject;
+            this.save(req, res, next);
+        });
+        route.put('/update/:id',upload.single(fileName), (req, res, next)=>{
+            this.model = modelObject;
+            this.update(req, res, next);
+        });
+        route.delete('/:id', (req, res, next)=>{
+            this.model = modelObject;
+            this.delete(req, res, next);
+        });
         return route;
     }
     async list(req, res){
-        // console.log(this.model);
+        console.log(this.model);
         const carts = await this.model.all();
         return res.json(carts);
     }

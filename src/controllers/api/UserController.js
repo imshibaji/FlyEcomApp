@@ -6,9 +6,7 @@ import { BaseApiController } from "./BaseApiController";
 export class UserController extends BaseApiController {
 
     constructor(){
-        const route = super('User');
-        // this.model = userModel;
-        // return route;
+        return super(userModel);
     }
 
     // constructor(){
@@ -26,10 +24,10 @@ export class UserController extends BaseApiController {
     //     res.json(users);
     // }
 
-    async single(req, res){
-        const user = await userModel.find(req.params.id);
-        res.json(user);
-    }
+    // async single(req, res){
+    //     const user = await userModel.find(req.params.id);
+    //     res.json(user);
+    // }
 
     async save(req, res){
         const data = req.body;
