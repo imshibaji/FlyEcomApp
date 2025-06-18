@@ -1,22 +1,30 @@
 import { Router } from "express";
 import { userModel } from "../../models/User";
+import { BaseApiController } from "./BaseApiController";
 
 
-export class UserController {
+export class UserController extends BaseApiController {
+
     constructor(){
-        const route = Router();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
+        const route = super('User');
+        // this.model = userModel;
+        // return route;
     }
 
-    async list(req, res){
-        const users = await userModel.all();
-        res.json(users);
-    }
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/:id', this.single);
+    //     route.post('/', this.save);
+    //     route.put('/update/:id', this.update);
+    //     route.delete('/:id', this.delete);
+    //     return route;
+    // }
+
+    // async list(req, res){
+    //     const users = await userModel.all();
+    //     res.json(users);
+    // }
 
     async single(req, res){
         const user = await userModel.find(req.params.id);

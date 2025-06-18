@@ -28,3 +28,7 @@ export class BaseModel {
         return await db(this.table).where('id', id).del();
     }
 }
+
+export default function getBaseModel(table) {
+    return new BaseModel(table);
+}

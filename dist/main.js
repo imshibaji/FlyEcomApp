@@ -119,6 +119,9 @@ class $720605a1bc090684$export$d12e20a4eec10acf {
         return await $720605a1bc090684$var$db(this.table).where('id', id).del();
     }
 }
+function $720605a1bc090684$export$2e2bcd8739ae039(table) {
+    return new $720605a1bc090684$export$d12e20a4eec10acf(table);
+}
 
 
 class $e79cae0f6706b914$export$621c2e9225361608 extends (0, $720605a1bc090684$export$d12e20a4eec10acf) {
@@ -187,20 +190,101 @@ class $1c16914251e6a9ba$export$2e2bcd8739ae039 {
 
 
 
-class $0ffe09501c96f62c$export$8bd653a33461d337 {
-    constructor(){
+
+
+
+const $00f2480bcbfac2c7$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
+    dest: 'public/uploads/'
+});
+let $00f2480bcbfac2c7$var$model = 'users';
+class $00f2480bcbfac2c7$export$17d6b2f1e5ea211e {
+    constructor(model, fileName = 'image'){
+        this.model = require(`../../models/${model}`)('users');
         const route = (0, $3PGwM$express.Router)();
         route.get('/', this.list);
         route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
+        route.post('/', $00f2480bcbfac2c7$var$upload.single(fileName), this.save);
+        route.put('/update/:id', $00f2480bcbfac2c7$var$upload.single(fileName), this.update);
         route.delete('/:id', this.delete);
         return route;
     }
     async list(req, res) {
-        const users = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).all();
-        res.json(users);
+        // console.log(this.model);
+        const carts = await this.model.all();
+        return res.json(carts);
     }
+    async single(req, res) {
+        const cart = await this.model.find(req.params.id);
+        res.json(cart);
+    }
+    async save(req, res) {
+        const data = req.body;
+        if (req.file) data.image = req.file.filename;
+        const savedData = await this.model.create(data);
+        if (savedData) return res.json({
+            success: true,
+            data: savedData
+        });
+        res.json({
+            success: false,
+            data: savedData,
+            error: 'Error'
+        });
+    }
+    async update(req, res) {
+        const data = req.body;
+        const img = req.file;
+        if (img) {
+            const oneData = await this.model.find(req.body.id);
+            if (oneData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + oneData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + oneData.image);
+            data.image = img.filename;
+        }
+        const updatedData = await this.model.update(data.id, data);
+        if (updatedData) return res.json({
+            success: true,
+            data: updatedData
+        });
+        res.json({
+            success: false,
+            data: updatedData,
+            error: 'Error'
+        });
+    }
+    async delete(req, res) {
+        const deletedData = await this.model.delete(req.params.id);
+        if (deletedData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + deletedData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + deletedData.image);
+        if (deletedData) return res.json({
+            success: true,
+            data: deletedData
+        });
+        res.json({
+            success: false,
+            data: deletedData,
+            error: 'Error'
+        });
+    }
+}
+
+
+class $0ffe09501c96f62c$export$8bd653a33461d337 extends (0, $00f2480bcbfac2c7$export$17d6b2f1e5ea211e) {
+    constructor(){
+        const route = super('User');
+    // this.model = userModel;
+    // return route;
+    }
+    // constructor(){
+    //     const route = Router();
+    //     route.get('/', this.list);
+    //     route.get('/:id', this.single);
+    //     route.post('/', this.save);
+    //     route.put('/update/:id', this.update);
+    //     route.delete('/:id', this.delete);
+    //     return route;
+    // }
+    // async list(req, res){
+    //     const users = await userModel.all();
+    //     res.json(users);
+    // }
     async single(req, res) {
         const user = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).find(req.params.id);
         res.json(user);
