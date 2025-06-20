@@ -1,11 +1,16 @@
 import { userModel } from "../../models/User";
-import { BaseController } from "./BaseController";
+import BaseController from "../BaseController";
+// import { BaseController } from "./BaseController";
 
 
 export class UserController extends BaseController {
 
     constructor(){
-        return super(userModel);
+        super(userModel, 'users', {
+            title: 'User',
+            // viewPrefix: 'api',
+            asApi: true
+        });
     }
 
     // constructor(){

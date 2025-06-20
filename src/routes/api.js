@@ -21,7 +21,11 @@ import { UserWishlistController } from "../controllers/api/UserWishlistControlle
 
 const route = Router();
 
-route.use('/users', new UserController());
+const userController = new UserController();
+userController.registerRoutes(route);
+
+// route.use('/users', new UserController());
+
 route.use('/carts', new CartController());
 route.use('/categories', new CategoryController());  
 route.use('/menus', new MenuController());

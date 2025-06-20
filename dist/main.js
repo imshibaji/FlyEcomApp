@@ -2,6 +2,7 @@ var $3PGwM$httperrors = require("http-errors");
 var $3PGwM$express = require("express");
 var $3PGwM$knex = require("knex");
 var $3PGwM$multer = require("multer");
+var $3PGwM$path = require("path");
 var $3PGwM$fs = require("fs");
 
 
@@ -95,12 +96,20 @@ class $5c59ea4c8355861e$export$2e2bcd8739ae039 {
 
 const $720605a1bc090684$var$db = (0, ($parcel$interopDefault($3PGwM$knex)))((0, $8f83deb1b44cdde1$export$2e2bcd8739ae039).development);
 class $720605a1bc090684$export$d12e20a4eec10acf {
-    constructor(table){
+    constructor(table, schema = null){
         this.table = table;
+        this.schema = schema; // zod schema
     }
     getTable() {
         return this.table;
     }
+    async validate(data) {
+        if (!this.schema) return data;
+        return this.schema.parseAsync(data);
+    }
+    // HOOKS
+    async beforeCreate(data) {}
+    async afterCreate(data, result) {}
     async all() {
         return await $720605a1bc090684$var$db(this.table).select('*');
     }
@@ -108,15 +117,38 @@ class $720605a1bc090684$export$d12e20a4eec10acf {
         return await $720605a1bc090684$var$db(this.table).select('*').where('id', id).first();
     }
     async create(data) {
-        return await $720605a1bc090684$var$db(this.table).insert(data);
+        const validData = await this.validate(data);
+        await this.beforeCreate(validData);
+        const [id] = await $720605a1bc090684$var$db(this.table).insert(validData);
+        const result = await this.find(id);
+        await this.afterCreate(validData, result);
+        return result;
     }
     async update(id, data) {
-        // remove id
-        if (data.id) delete data.id;
-        return await $720605a1bc090684$var$db(this.table).update(data).where('id', id);
+        const validData = await this.validate(data);
+        await this.beforeCreate(validData);
+        const result = await $720605a1bc090684$var$db(this.table).where({
+            id: id
+        }).update(validData);
+        console.log(result);
+        await this.afterCreate(validData, result);
+        return result;
     }
     async delete(id) {
         return await $720605a1bc090684$var$db(this.table).where('id', id).del();
+    }
+    where(filter) {
+        return $720605a1bc090684$var$db(this.table).where(filter);
+    }
+    // RELATIONSHIP HELPERS
+    async hasOne(relatedModel, foreignKey, localKey = 'id') {
+        return $720605a1bc090684$var$db(relatedModel.table).where(foreignKey, this[localKey]).first();
+    }
+    async hasMany(relatedModel, foreignKey, localKey = 'id') {
+        return $720605a1bc090684$var$db(relatedModel.table).where(foreignKey, this[localKey]);
+    }
+    async belongsTo(relatedModel, foreignKey, targetKey = 'id') {
+        return $720605a1bc090684$var$db(relatedModel.table).where(targetKey, this[foreignKey]).first();
     }
 }
 function $720605a1bc090684$export$2e2bcd8739ae039(table) {
@@ -192,101 +224,192 @@ class $1c16914251e6a9ba$export$2e2bcd8739ae039 {
 
 
 
-const $87d35aed0881b942$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
-    dest: 'public/uploads/'
-});
-class $87d35aed0881b942$export$bd0bf19f25da8474 {
-    constructor(modelObject, fileName = 'image'){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', (req, res, next)=>{
-            this.model = modelObject;
-            this.list(req, res, next);
+class $d9c71b4f8cb1b933$export$2e2bcd8739ae039 {
+    constructor(model, resource, { title: title = 'Resource', viewPrefix: viewPrefix = 'admin', asApi: asApi = false } = {}){
+        this.model = model;
+        this.resource = resource;
+        this.title = title;
+        this.viewPrefix = viewPrefix;
+        this.asApi = asApi;
+        this.streamClients = new Set(); // SSE clients
+        // File upload config
+        const storage = (0, ($parcel$interopDefault($3PGwM$multer))).diskStorage({
+            destination: 'public/uploads/',
+            filename: (req, file, cb)=>{
+                const ext = (0, ($parcel$interopDefault($3PGwM$path))).extname(file.originalname);
+                cb(null, `${Date.now()}${ext}`);
+            }
         });
-        route.get('/:id', (req, res, next)=>{
-            this.model = modelObject;
-            this.single(req, res, next);
+        this.upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
+            storage: storage
         });
-        route.post('/', $87d35aed0881b942$var$upload.single(fileName), (req, res, next)=>{
-            this.model = modelObject;
-            this.save(req, res, next);
-        });
-        route.put('/update/:id', $87d35aed0881b942$var$upload.single(fileName), (req, res, next)=>{
-            this.model = modelObject;
-            this.update(req, res, next);
-        });
-        route.delete('/:id', (req, res, next)=>{
-            this.model = modelObject;
-            this.delete(req, res, next);
-        });
-        return route;
     }
+    get viewPath() {
+        return `${this.viewPrefix}/${this.resource}`;
+    }
+    // Register all standard routes including SSE
+    registerRoutes(router, { prefix: prefix = '' } = {}) {
+        const base = `${prefix}/${this.resource}`;
+        // SSE stream
+        router.get(`${base}/stream`, this.stream.bind(this));
+        // Standard routes
+        router.get(`${base}`, this.list.bind(this));
+        router.get(`${base}/create`, this.create.bind(this));
+        router.post(`${base}`, this.upload.single('image'), this.save.bind(this));
+        router.get(`${base}/:id`, this.show.bind(this));
+        router.get(`${base}/:id/edit`, this.edit.bind(this));
+        router.put(`${base}/:id/update`, this.upload.single('image'), this.update.bind(this));
+        router.delete(`${base}/:id/delete`, this.delete.bind(this));
+    }
+    // Smart render with JSON fallback
+    async render(req, res, view, data1) {
+        const isApi = data1.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+        if (isApi) return res.json({
+            success: true,
+            data: data1
+        });
+        try {
+            res.render(view, data1);
+        } catch (err) {
+            if (err.message.includes('Failed to lookup view')) res.json({
+                success: true,
+                viewFallback: true,
+                data: data1
+            });
+            else throw err;
+        }
+    }
+    // File deletion helper
+    deleteFileIfExists(filePath) {
+        const fullPath = (0, ($parcel$interopDefault($3PGwM$path))).join(process.cwd(), 'public', filePath.replace(/^\/+/, ''));
+        (0, ($parcel$interopDefault($3PGwM$fs))).access(fullPath, (0, ($parcel$interopDefault($3PGwM$fs))).constants.F_OK, (err)=>{
+            if (!err) (0, ($parcel$interopDefault($3PGwM$fs))).unlink(fullPath, (err)=>{
+                if (err) console.error('Error deleting file:', err);
+            });
+        });
+    }
+    // Push data to all live SSE clients
+    pushStreamData(data1) {
+        const payload = `data: ${JSON.stringify(data1)}\n\n`;
+        for (const res of this.streamClients)try {
+            res.write(payload);
+        } catch (err) {
+            this.streamClients.delete(res);
+        }
+    }
+    // Live SSE stream endpoint
+    async stream(req, res) {
+        res.set({
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+        });
+        res.flushHeaders();
+        this.streamClients.add(res);
+        // Optional: periodic heartbeat
+        const interval = setInterval(()=>{
+            res.write(`data: ${JSON.stringify({
+                ping: new Date().toISOString()
+            })}\n\n`);
+        }, 15000);
+        req.on('close', ()=>{
+            clearInterval(interval);
+            this.streamClients.delete(res);
+            res.end();
+        });
+    }
+    // CRUD methods below
     async list(req, res) {
-        const carts = await this.model.all();
-        return res.json(carts);
+        const records = await this.model.all();
+        await this.render(req, res, `${this.viewPath}/index`, {
+            [this.resource]: records,
+            title: `${this.title} List`
+        });
     }
-    async single(req, res) {
-        const cart = await this.model.find(req.params.id);
-        res.json(cart);
+    async create(req, res) {
+        await this.render(req, res, `${this.viewPath}/create`, {
+            title: `Create ${this.title}`
+        });
+    }
+    async show(req, res) {
+        const record = await this.model.find(req.params.id);
+        await this.render(req, res, `${this.viewPath}/show`, {
+            [this.resource.slice(0, -1)]: record,
+            title: `${this.title} Details`
+        });
+    }
+    async edit(req, res) {
+        const record = await this.model.find(req.params.id);
+        await this.render(req, res, `${this.viewPath}/edit`, {
+            [this.resource.slice(0, -1)]: record,
+            title: `Edit ${this.title}`
+        });
     }
     async save(req, res) {
-        const data = req.body;
-        if (req.file) data.image = req.file.filename;
-        const savedData = await this.model.create(data);
-        if (savedData) {
-            const data = await this.model.find(savedData[0]);
-            return res.json({
-                success: true,
-                data: data
-            });
-        }
-        res.json({
-            success: false,
-            error: 'Error: Data not inserted.'
+        const data1 = req.body;
+        if (req.file) data1.image = `/uploads/${req.file.filename}`;
+        const result = await this.model.create(data1);
+        const savedData = await this.model.find(result.id);
+        this.pushStreamData({
+            event: 'create',
+            data: savedData
         });
+        const isApi = data1.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+        if (isApi) return res.json({
+            success: true,
+            message: `${this.title} created`,
+            data: savedData
+        });
+        res.redirect(`/${this.viewPrefix}/${this.resource}`);
     }
     async update(req, res) {
-        const data = req.body;
-        const img = req.file;
-        if (img) {
-            const oneData = await this.model.find(req.body.id);
-            if (oneData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + oneData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + oneData.image);
-            data.image = img.filename;
+        const data1 = req.body;
+        const existing = await this.model.find(data1.id);
+        if (req.file) {
+            if (existing?.image) this.deleteFileIfExists(existing.image);
+            data1.image = `/uploads/${req.file.filename}`;
         }
-        const updatedData = await this.model.update(data.id, data);
-        if (updatedData) {
-            const data = await this.model.find(updatedData);
-            return res.json({
-                success: true,
-                data: data
-            });
-        }
-        res.json({
-            success: false,
-            error: 'Error: data not updated.'
+        const updated = await this.model.update(data1.id, data1);
+        // if (updated.error) return res.json({ success: false, message: updated.error });
+        console.log(updated);
+        const updatedData = await this.model.find(data1.id);
+        this.pushStreamData({
+            event: 'update',
+            data: updatedData
         });
+        const isApi = data1.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+        if (isApi) return res.json({
+            success: true,
+            message: `${this.title} updated`,
+            data: updatedData
+        });
+        res.redirect(`/${this.viewPrefix}/${this.resource}`);
     }
     async delete(req, res) {
-        const deletedData = await this.model.delete(req.params.id);
-        if (deletedData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + deletedData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + deletedData.image);
-        if (deletedData) return res.json({
+        const existing = await this.model.find(req.params.id);
+        if (existing?.image) this.deleteFileIfExists(existing.image);
+        await this.model.delete(req.params.id);
+        this.pushStreamData({
+            event: 'delete',
+            id: req.params.id
+        });
+        const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+        if (isApi) return res.json({
             success: true,
-            data: deletedData
+            message: `${this.title} deleted`
         });
-        res.json({
-            success: false,
-            error: 'Error'
-        });
+        res.redirect(`/${this.viewPrefix}/${this.resource}`);
     }
 }
 
 
-class $59de550bd570d5b9$export$3b5bd9381a52554c extends (0, $87d35aed0881b942$export$bd0bf19f25da8474) {
-}
-
-
-class $0ffe09501c96f62c$export$8bd653a33461d337 extends (0, $59de550bd570d5b9$export$3b5bd9381a52554c) {
+class $0ffe09501c96f62c$export$8bd653a33461d337 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        return super((0, $e79cae0f6706b914$export$54582e7b17f0fab7));
+        super((0, $e79cae0f6706b914$export$54582e7b17f0fab7), 'users', {
+            title: 'User',
+            // viewPrefix: 'api',
+            asApi: true
+        });
     }
 }
 
@@ -587,6 +710,100 @@ class $ae7c6e3668f66242$export$f59d3de288812f26 extends (0, $720605a1bc090684$ex
 }
 const $ae7c6e3668f66242$export$e7624ed1afe99528 = new $ae7c6e3668f66242$export$f59d3de288812f26();
 
+
+
+
+
+const $87d35aed0881b942$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
+    dest: 'public/uploads/'
+});
+class $87d35aed0881b942$export$bd0bf19f25da8474 {
+    constructor(modelObject, fileName = 'image'){
+        const route = (0, $3PGwM$express.Router)();
+        route.get('/', (req, res, next)=>{
+            this.model = modelObject;
+            this.list(req, res, next);
+        });
+        route.get('/:id', (req, res, next)=>{
+            this.model = modelObject;
+            this.single(req, res, next);
+        });
+        route.post('/', $87d35aed0881b942$var$upload.single(fileName), (req, res, next)=>{
+            this.model = modelObject;
+            this.save(req, res, next);
+        });
+        route.put('/update/:id', $87d35aed0881b942$var$upload.single(fileName), (req, res, next)=>{
+            this.model = modelObject;
+            this.update(req, res, next);
+        });
+        route.delete('/:id', (req, res, next)=>{
+            this.model = modelObject;
+            this.delete(req, res, next);
+        });
+        return route;
+    }
+    async list(req, res) {
+        const carts = await this.model.all();
+        return res.json(carts);
+    }
+    async single(req, res) {
+        const cart = await this.model.find(req.params.id);
+        res.json(cart);
+    }
+    async save(req, res) {
+        const data = req.body;
+        if (req.file) data.image = req.file.filename;
+        const savedData = await this.model.create(data);
+        if (savedData) {
+            const data = await this.model.find(savedData[0]);
+            return res.json({
+                success: true,
+                data: data
+            });
+        }
+        res.json({
+            success: false,
+            error: 'Error: Data not inserted.'
+        });
+    }
+    async update(req, res) {
+        const data = req.body;
+        const img = req.file;
+        if (img) {
+            const oneData = await this.model.find(req.body.id);
+            if (oneData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + oneData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + oneData.image);
+            data.image = img.filename;
+        }
+        const updatedData = await this.model.update(data.id, data);
+        if (updatedData) {
+            const data = await this.model.find(updatedData);
+            return res.json({
+                success: true,
+                data: data
+            });
+        }
+        res.json({
+            success: false,
+            error: 'Error: data not updated.'
+        });
+    }
+    async delete(req, res) {
+        const deletedData = await this.model.delete(req.params.id);
+        if (deletedData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + deletedData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + deletedData.image);
+        if (deletedData) return res.json({
+            success: true,
+            data: deletedData
+        });
+        res.json({
+            success: false,
+            error: 'Error'
+        });
+    }
+}
+
+
+class $59de550bd570d5b9$export$3b5bd9381a52554c extends (0, $87d35aed0881b942$export$bd0bf19f25da8474) {
+}
 
 
 class $94f9eec94a39dbcb$export$676eee9a3c69e247 extends (0, $59de550bd570d5b9$export$3b5bd9381a52554c) {
@@ -1077,7 +1294,11 @@ class $b96e9e74c65bdcb9$export$f197b856d17b2798 {
 
 
 const $be9e254f217a7a93$var$route = (0, $3PGwM$express.Router)();
-$be9e254f217a7a93$var$route.use('/users', new (0, $0ffe09501c96f62c$export$8bd653a33461d337)());
+const $be9e254f217a7a93$var$userController = new (0, $0ffe09501c96f62c$export$8bd653a33461d337)();
+$be9e254f217a7a93$var$userController.registerRoutes($be9e254f217a7a93$var$route, {
+    prefix: ''
+});
+// route.use('/users', new UserController());
 $be9e254f217a7a93$var$route.use('/carts', new (0, $e5328f9c26fc730a$export$41bd0aa259b8bd99)());
 $be9e254f217a7a93$var$route.use('/categories', new (0, $60cf312414915001$export$b19455c5574c398e)());
 $be9e254f217a7a93$var$route.use('/menus', new (0, $e504edb39c56c718$export$c0716dcad1882e32)());
