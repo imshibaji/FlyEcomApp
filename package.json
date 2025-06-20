@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node main.js",
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",
-    "watch": "parcel watch",
+    "watch": "parcel watch --no-source-maps",
     "build": "copy-files-from-to --config deploy.json",
     "serve": "nodemon dist/main.js",
     "knex": "knex"

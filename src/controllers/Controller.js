@@ -2,7 +2,9 @@ import { Router } from "express";
 import multer from "multer";
 import fs from 'fs';
 const upload = multer({ dest: 'public/uploads/' });
-export class BaseApiController {
+
+
+export class Controller {
     constructor(modelObject,fileName='image'){
         const route = Router();
         route.get('/', (req, res, next)=>{
@@ -28,7 +30,6 @@ export class BaseApiController {
         return route;
     }
     async list(req, res){
-        console.log(this.model);
         const carts = await this.model.all();
         return res.json(carts);
     }
@@ -45,15 +46,15 @@ export class BaseApiController {
         }
         const savedData = await this.model.create(data);
         if(savedData) {
+            const data = await this.model.find(savedData[0]);
             return res.json({
                 success: true,
-                data: savedData
+                data: data
             });
         }
         res.json({
             success: false,
-            data: savedData,
-            error: 'Error',
+            error: 'Error: Data not inserted.',
         });
     }
 
@@ -69,15 +70,15 @@ export class BaseApiController {
         }
         const updatedData = await this.model.update(data.id, data);
         if(updatedData) {
+            const data = await this.model.find(updatedData);
             return res.json({
                 success: true,
-                data: updatedData
+                data: data
             });
         }
         res.json({
             success: false,
-            data: updatedData,
-            error: 'Error',
+            error: 'Error: data not updated.',
         });
     }
 
@@ -94,7 +95,6 @@ export class BaseApiController {
         }
         res.json({
             success: false,
-            data: deletedData,
             error: 'Error',
         });
     }

@@ -1,9 +1,8 @@
-import { Router } from "express";
 import { userModel } from "../../models/User";
-import { BaseApiController } from "./BaseApiController";
+import { BaseController } from "./BaseController";
 
 
-export class UserController extends BaseApiController {
+export class UserController extends BaseController {
 
     constructor(){
         return super(userModel);
@@ -20,7 +19,12 @@ export class UserController extends BaseApiController {
     // }
 
     // async list(req, res){
-    //     const users = await userModel.all();
+    //     const users = (await userModel.all()).map(user => {
+    //         return {
+    //             ...user,
+    //             checked: true
+    //         }
+    //     });
     //     res.json(users);
     // }
 
@@ -29,30 +33,30 @@ export class UserController extends BaseApiController {
     //     res.json(user);
     // }
 
-    async save(req, res){
-        const data = req.body;
-        const id = await userModel.create(data);
-        if(id) {
-            return res.redirect('/users');
-        }
-        res.redirect('/users/create');
-    }
+    // async save(req, res){
+    //     const data = req.body;
+    //     const id = await userModel.create(data);
+    //     if(id) {
+    //         return res.redirect('/users');
+    //     }
+    //     res.redirect('/users/create');
+    // }
 
-    async update(req, res){
-        const data = req.body;
-        const id = await userModel.update(data.id, data);
-        if(id) {
-            return res.redirect('/users');
-        }
-        res.redirect('/users/edit');
-    }
+    // async update(req, res){
+    //     const data = req.body;
+    //     const id = await userModel.update(data.id, data);
+    //     if(id) {
+    //         return res.redirect('/users');
+    //     }
+    //     res.redirect('/users/edit');
+    // }
 
-    async delete(req, res){
-        const id = await userModel.delete(req.params.id);
-        if(id) {
-            return res.redirect('/users');
-        }
-        res.redirect('/users');
-    }
+    // async delete(req, res){
+    //     const id = await userModel.delete(req.params.id);
+    //     if(id) {
+    //         return res.redirect('/users');
+    //     }
+    //     res.redirect('/users');
+    // }
 
 }
