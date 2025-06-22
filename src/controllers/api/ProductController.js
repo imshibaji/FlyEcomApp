@@ -4,6 +4,9 @@ import { BaseController } from "./BaseController";
 
 export class ProductController extends BaseController {
     constructor(){
-        return super(productModel);
+        return super(productModel, 'products',{
+            title: 'Products',
+            asApi: true
+        });
     }
 }
