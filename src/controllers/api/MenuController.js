@@ -1,4 +1,3 @@
-
 import { menuModel } from "../../models/Menu";
 import BaseController from "../BaseController";
 

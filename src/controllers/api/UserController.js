@@ -12,4 +12,9 @@ export class UserController extends BaseController {
         });
     }
 
+    async show(req, res){
+        const users = await userModel.posts();
+        return res.json(users);
+    }
+
 }

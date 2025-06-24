@@ -3,11 +3,11 @@ import path from 'path';
 import multer from 'multer';
 
 export default class BaseController {
-  constructor(model, resource, {title = 'Resource', viewPrefix = 'admin', asApi = false} = {}) {
+  constructor(model, resource, {title = 'Resource', viewPath = 'admin', asApi = false} = {}) {
     this.model = model;
     this.resource = resource;
     this.title = title;
-    this.viewPrefix = viewPrefix;
+    this.viewPrefix = viewPath;
     this.asApi = asApi;
     this.streamClients = new Set(); // SSE clients
 

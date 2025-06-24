@@ -1,5 +1,6 @@
 import {permissionModel} from "../../models/Permission";
 import BaseController from "../BaseController";
+// import BaseController from "../BaseController";
 
 export class PermissionController extends BaseController {
     constructor() {

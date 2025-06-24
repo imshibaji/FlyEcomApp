@@ -103,52 +103,73 @@ class $720605a1bc090684$export$d12e20a4eec10acf {
     getTable() {
         return this.table;
     }
+    // Optional Zod validation
     async validate(data) {
         if (!this.schema) return data;
         return this.schema.parseAsync(data);
     }
-    // HOOKS
-    async beforeCreate(data) {}
+    // HOOKS (override in child models)
+    async beforeCreate(data) {
+        return data;
+    }
     async afterCreate(data, result) {}
+    async beforeUpdate(data) {
+        return data;
+    }
+    async afterUpdate(data, result) {}
+    async beforeDelete(id) {}
+    async afterDelete(id) {}
     async all() {
         return await $720605a1bc090684$var$db(this.table).select('*');
     }
     async find(id) {
         return await $720605a1bc090684$var$db(this.table).select('*').where('id', id).first();
     }
+    async findById(id) {
+        return $720605a1bc090684$var$db(this.table).where({
+            id: id
+        }).first();
+    }
+    // CREATE
     async create(data) {
         const validData = await this.validate(data);
         await this.beforeCreate(validData);
-        const [id] = await $720605a1bc090684$var$db(this.table).insert(validData);
-        const result = await this.find(id);
+        const [id] = await $720605a1bc090684$var$db(this.table).insert(validData).returning('id');
+        const result = await this.findById(id.id || id); // PostgreSQL returns object
         await this.afterCreate(validData, result);
         return result;
     }
+    // UPDATE
     async update(id, data) {
         const validData = await this.validate(data);
-        await this.beforeCreate(validData);
-        const result = await $720605a1bc090684$var$db(this.table).where({
+        await this.beforeUpdate(validData);
+        await $720605a1bc090684$var$db(this.table).where({
             id: id
         }).update(validData);
-        console.log(result);
-        await this.afterCreate(validData, result);
+        const result = await this.findById(id);
+        await this.afterUpdate(validData, result);
         return result;
     }
+    // DELETE
     async delete(id) {
-        return await $720605a1bc090684$var$db(this.table).where('id', id).del();
+        await this.beforeDelete(id);
+        const deleted = await $720605a1bc090684$var$db(this.table).where({
+            id: id
+        }).del();
+        await this.afterDelete(id);
+        return deleted;
     }
     where(filter) {
         return $720605a1bc090684$var$db(this.table).where(filter);
     }
-    // RELATIONSHIP HELPERS
     async hasOne(relatedModel, foreignKey, localKey = 'id') {
-        return $720605a1bc090684$var$db(relatedModel.table).where(foreignKey, this[localKey]).first();
+        return await $720605a1bc090684$var$db(relatedModel.table).join(this.table, `${relatedModel.table}.${foreignKey}`, `${this.table}.${localKey}`).where(`${relatedModel.table}.${foreignKey}`, this[localKey]).first();
     }
     async hasMany(relatedModel, foreignKey, localKey = 'id') {
-        return $720605a1bc090684$var$db(relatedModel.table).where(foreignKey, this[localKey]);
+        return await $720605a1bc090684$var$db(relatedModel.table).join(this.table, `${relatedModel.table}.${foreignKey}`, `${this.table}.${localKey}`).where(`${relatedModel.table}.${foreignKey}`, this[localKey]).select('*');
     }
     async belongsTo(relatedModel, foreignKey, targetKey = 'id') {
-        return $720605a1bc090684$var$db(relatedModel.table).where(targetKey, this[foreignKey]).first();
+        return await $720605a1bc090684$var$db(this.table).join(relatedModel.table, `${this.table}.${foreignKey}`, `${relatedModel.table}.${targetKey}`).where(`${relatedModel.table}.${targetKey}`, this[targetKey]).first();
     }
 }
 function $720605a1bc090684$export$2e2bcd8739ae039(table) {
@@ -156,9 +177,34 @@ function $720605a1bc090684$export$2e2bcd8739ae039(table) {
 }
 
 
+
+
+class $b72ce89b77f98a90$export$c043f710884189ad extends (0, $720605a1bc090684$export$d12e20a4eec10acf) {
+    constructor(){
+        super('posts');
+    }
+    async user() {
+        return this.belongsTo((0, $e79cae0f6706b914$export$54582e7b17f0fab7), 'user_id', 'id');
+    }
+}
+const $b72ce89b77f98a90$export$96ff8f02380ce42b = new $b72ce89b77f98a90$export$c043f710884189ad();
+
+
 class $e79cae0f6706b914$export$621c2e9225361608 extends (0, $720605a1bc090684$export$d12e20a4eec10acf) {
     constructor(){
         super('users');
+    }
+    async beforeCreate(data) {
+        data.created_at = new Date();
+        data.updated_at = new Date();
+        return data;
+    }
+    async beforeUpdate(data) {
+        data.updated_at = new Date();
+        return data;
+    }
+    async posts(id) {
+        return await this.hasMany((0, $b72ce89b77f98a90$export$96ff8f02380ce42b), 'user_id', id);
     }
 }
 const $e79cae0f6706b914$export$54582e7b17f0fab7 = new $e79cae0f6706b914$export$621c2e9225361608();
@@ -223,13 +269,12 @@ class $1c16914251e6a9ba$export$2e2bcd8739ae039 {
 
 
 
-
 class $d9c71b4f8cb1b933$export$2e2bcd8739ae039 {
-    constructor(model, resource, { title: title = 'Resource', viewPrefix: viewPrefix = 'admin', asApi: asApi = false } = {}){
+    constructor(model, resource, { title: title = 'Resource', viewPath: viewPath = 'admin', asApi: asApi = false } = {}){
         this.model = model;
         this.resource = resource;
         this.title = title;
-        this.viewPrefix = viewPrefix;
+        this.viewPrefix = viewPath;
         this.asApi = asApi;
         this.streamClients = new Set(); // SSE clients
         // File upload config
@@ -411,8 +456,11 @@ class $0ffe09501c96f62c$export$8bd653a33461d337 extends (0, $d9c71b4f8cb1b933$ex
             asApi: true
         });
     }
+    async show(req, res) {
+        const users = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).posts();
+        return res.json(users);
+    }
 }
-
 
 
 
@@ -424,43 +472,15 @@ class $2d56d05ac455fcf5$export$ea9341ce97e15b96 extends (0, $720605a1bc090684$ex
 const $2d56d05ac455fcf5$export$daf4f2b0193021e2 = new $2d56d05ac455fcf5$export$ea9341ce97e15b96();
 
 
-class $e5328f9c26fc730a$export$41bd0aa259b8bd99 {
+
+class $e5328f9c26fc730a$export$41bd0aa259b8bd99 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const carts = await (0, $2d56d05ac455fcf5$export$daf4f2b0193021e2).all();
-        res.json(carts);
-    }
-    async single(req, res) {
-        const cart = await (0, $2d56d05ac455fcf5$export$daf4f2b0193021e2).find(req.params.id);
-        res.json(cart);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $2d56d05ac455fcf5$export$daf4f2b0193021e2).create(data);
-        if (id) return res.redirect('/carts');
-        res.redirect('/carts/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $2d56d05ac455fcf5$export$daf4f2b0193021e2).update(data.id, data);
-        if (id) return res.redirect('/carts');
-        res.redirect('/carts/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $2d56d05ac455fcf5$export$daf4f2b0193021e2).delete(req.params.id);
-        if (id) return res.redirect('/carts');
-        res.redirect('/carts');
+        super((0, $2d56d05ac455fcf5$export$daf4f2b0193021e2), 'carts', {
+            title: 'Cart',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -472,43 +492,15 @@ class $c3cc1681a3def845$export$e1bbb50836aa0481 extends (0, $720605a1bc090684$ex
 const $c3cc1681a3def845$export$a2705413a9011472 = new $c3cc1681a3def845$export$e1bbb50836aa0481();
 
 
-class $60cf312414915001$export$b19455c5574c398e {
+
+class $60cf312414915001$export$b19455c5574c398e extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const carts = await (0, $c3cc1681a3def845$export$a2705413a9011472).all();
-        res.json(carts);
-    }
-    async single(req, res) {
-        const cart = await (0, $c3cc1681a3def845$export$a2705413a9011472).find(req.params.id);
-        res.json(cart);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $c3cc1681a3def845$export$a2705413a9011472).create(data);
-        if (id) return res.redirect('/carts');
-        res.redirect('/carts/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $c3cc1681a3def845$export$a2705413a9011472).update(data.id, data);
-        if (id) return res.redirect('/carts');
-        res.redirect('/carts/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $c3cc1681a3def845$export$a2705413a9011472).delete(req.params.id);
-        if (id) return res.redirect('/carts');
-        res.redirect('/carts');
+        super((0, $c3cc1681a3def845$export$a2705413a9011472), 'categories', {
+            title: 'Category',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -520,43 +512,15 @@ class $12e34c29dad7faac$export$99b67d04e1b65c9c extends (0, $720605a1bc090684$ex
 const $12e34c29dad7faac$export$cc7cffe9e4be3b90 = new $12e34c29dad7faac$export$99b67d04e1b65c9c();
 
 
-class $e504edb39c56c718$export$c0716dcad1882e32 {
+
+class $e504edb39c56c718$export$c0716dcad1882e32 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const menus = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).all();
-        res.json(menus);
-    }
-    async single(req, res) {
-        const menu = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).all();
-        res.json(menu);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).create(data);
-        if (id) return res.redirect('/menus');
-        res.redirect('/menus/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).update(data.id, data);
-        if (id) return res.redirect('/menus');
-        res.redirect('/menus/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $12e34c29dad7faac$export$cc7cffe9e4be3b90).delete(req.params.id);
-        if (id) return res.redirect('/menus');
-        res.redirect('/menus');
+        super((0, $12e34c29dad7faac$export$cc7cffe9e4be3b90), 'menus', {
+            title: 'Menu',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -568,43 +532,15 @@ class $ddfcbe5356107152$export$d07d823ae64ba5bf extends (0, $720605a1bc090684$ex
 const $ddfcbe5356107152$export$bbc4da2410d90f08 = new $ddfcbe5356107152$export$d07d823ae64ba5bf();
 
 
-class $8a56a44f19442c88$export$36c71b95759fd255 {
+
+class $8a56a44f19442c88$export$36c71b95759fd255 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const orders = await (0, $ddfcbe5356107152$export$bbc4da2410d90f08).all();
-        res.json(orders);
-    }
-    async single(req, res) {
-        const order = await (0, $ddfcbe5356107152$export$bbc4da2410d90f08).find(req.params.id);
-        res.json(order);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $ddfcbe5356107152$export$bbc4da2410d90f08).create(data);
-        if (id) return res.redirect('/orders');
-        res.redirect('/orders/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $ddfcbe5356107152$export$bbc4da2410d90f08).update(data.id, data);
-        if (id) return res.redirect('/orders');
-        res.redirect('/orders/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $ddfcbe5356107152$export$bbc4da2410d90f08).delete(req.params.id);
-        if (id) return res.redirect('/orders');
-        res.redirect('/orders');
+        super((0, $ddfcbe5356107152$export$bbc4da2410d90f08), 'orders', {
+            title: 'Order',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -616,88 +552,25 @@ class $511d4c80db202b64$export$171c96e3ae1a825d extends (0, $720605a1bc090684$ex
 const $511d4c80db202b64$export$31274c72f0ded6f7 = new $511d4c80db202b64$export$171c96e3ae1a825d();
 
 
-class $e590532c03367ed3$export$f14414e4da36344a {
+
+class $e590532c03367ed3$export$f14414e4da36344a extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const data = await (0, $511d4c80db202b64$export$31274c72f0ded6f7).all();
-        return res.json(data);
-    }
-    async single(req, res) {
-        const data = await (0, $511d4c80db202b64$export$31274c72f0ded6f7).single(req.params.id);
-        return res.json(data);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $511d4c80db202b64$export$31274c72f0ded6f7).create(data);
-        if (id) return res.redirect('/permissions');
-        res.redirect('/permissions/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $511d4c80db202b64$export$31274c72f0ded6f7).update(data.id, data);
-        if (id) return res.redirect('/permissions');
-        res.redirect('/permissions/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $511d4c80db202b64$export$31274c72f0ded6f7).delete(req.params.id);
-        if (id) return res.redirect('/permissions');
-        res.redirect('/permissions');
+        super((0, $511d4c80db202b64$export$31274c72f0ded6f7), 'permissions', {
+            title: 'Permission',
+            asApi: true
+        });
     }
 }
 
 
 
 
-class $b72ce89b77f98a90$export$c043f710884189ad extends (0, $720605a1bc090684$export$d12e20a4eec10acf) {
+class $502dd910a7620e20$export$c4018ffee86f7dfc extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        super('posts');
-    }
-}
-const $b72ce89b77f98a90$export$96ff8f02380ce42b = new $b72ce89b77f98a90$export$c043f710884189ad();
-
-
-class $502dd910a7620e20$export$c4018ffee86f7dfc {
-    constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const posts = await (0, $b72ce89b77f98a90$export$96ff8f02380ce42b).all();
-        res.json(posts);
-    }
-    async single(req, res) {
-        const post = await (0, $b72ce89b77f98a90$export$96ff8f02380ce42b).find(req.params.id);
-        res.json(post);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $b72ce89b77f98a90$export$96ff8f02380ce42b).create(data);
-        if (id) return res.redirect('/posts');
-        res.redirect('/posts/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $b72ce89b77f98a90$export$96ff8f02380ce42b).update(data.id, data);
-        if (id) return res.redirect('/posts');
-        res.redirect('/posts/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $b72ce89b77f98a90$export$96ff8f02380ce42b).delete(req.params.id);
-        if (id) return res.redirect('/posts');
-        res.redirect('/posts');
+        super((0, $b72ce89b77f98a90$export$96ff8f02380ce42b), 'posts', {
+            title: 'Post',
+            asApi: true
+        });
     }
 }
 
@@ -712,106 +585,14 @@ const $ae7c6e3668f66242$export$e7624ed1afe99528 = new $ae7c6e3668f66242$export$f
 
 
 
-
-
-const $87d35aed0881b942$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
-    dest: 'public/uploads/'
-});
-class $87d35aed0881b942$export$bd0bf19f25da8474 {
-    constructor(modelObject, fileName = 'image'){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', (req, res, next)=>{
-            this.model = modelObject;
-            this.list(req, res, next);
-        });
-        route.get('/:id', (req, res, next)=>{
-            this.model = modelObject;
-            this.single(req, res, next);
-        });
-        route.post('/', $87d35aed0881b942$var$upload.single(fileName), (req, res, next)=>{
-            this.model = modelObject;
-            this.save(req, res, next);
-        });
-        route.put('/update/:id', $87d35aed0881b942$var$upload.single(fileName), (req, res, next)=>{
-            this.model = modelObject;
-            this.update(req, res, next);
-        });
-        route.delete('/:id', (req, res, next)=>{
-            this.model = modelObject;
-            this.delete(req, res, next);
-        });
-        return route;
-    }
-    async list(req, res) {
-        const carts = await this.model.all();
-        return res.json(carts);
-    }
-    async single(req, res) {
-        const cart = await this.model.find(req.params.id);
-        res.json(cart);
-    }
-    async save(req, res) {
-        const data = req.body;
-        if (req.file) data.image = req.file.filename;
-        const savedData = await this.model.create(data);
-        if (savedData) {
-            const data = await this.model.find(savedData[0]);
-            return res.json({
-                success: true,
-                data: data
-            });
-        }
-        res.json({
-            success: false,
-            error: 'Error: Data not inserted.'
-        });
-    }
-    async update(req, res) {
-        const data = req.body;
-        const img = req.file;
-        if (img) {
-            const oneData = await this.model.find(req.body.id);
-            if (oneData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + oneData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + oneData.image);
-            data.image = img.filename;
-        }
-        const updatedData = await this.model.update(data.id, data);
-        if (updatedData) {
-            const data = await this.model.find(updatedData);
-            return res.json({
-                success: true,
-                data: data
-            });
-        }
-        res.json({
-            success: false,
-            error: 'Error: data not updated.'
-        });
-    }
-    async delete(req, res) {
-        const deletedData = await this.model.delete(req.params.id);
-        if (deletedData.image && (0, ($parcel$interopDefault($3PGwM$fs))).existsSync('public/uploads/' + deletedData.image)) (0, ($parcel$interopDefault($3PGwM$fs))).unlinkSync('public/uploads/' + deletedData.image);
-        if (deletedData) return res.json({
-            success: true,
-            data: deletedData
-        });
-        res.json({
-            success: false,
-            error: 'Error'
-        });
-    }
-}
-
-
-class $59de550bd570d5b9$export$3b5bd9381a52554c extends (0, $87d35aed0881b942$export$bd0bf19f25da8474) {
-}
-
-
-class $94f9eec94a39dbcb$export$676eee9a3c69e247 extends (0, $59de550bd570d5b9$export$3b5bd9381a52554c) {
+class $94f9eec94a39dbcb$export$676eee9a3c69e247 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        return super((0, $ae7c6e3668f66242$export$e7624ed1afe99528));
+        return super((0, $ae7c6e3668f66242$export$e7624ed1afe99528), 'products', {
+            title: 'Products',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -823,43 +604,15 @@ class $9c0805fced9c045d$export$9b1c1b0ac848bd2a extends (0, $720605a1bc090684$ex
 const $9c0805fced9c045d$export$4a60180ddabce40 = new $9c0805fced9c045d$export$9b1c1b0ac848bd2a();
 
 
-class $1fa3117e28a20169$export$aab409ec1c4f7d58 {
+
+class $1fa3117e28a20169$export$aab409ec1c4f7d58 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const reviews = await (0, $9c0805fced9c045d$export$4a60180ddabce40).all();
-        res.json(reviews);
-    }
-    async single(req, res) {
-        const review = await (0, $9c0805fced9c045d$export$4a60180ddabce40).find(req.params.id);
-        res.json(review);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $9c0805fced9c045d$export$4a60180ddabce40).create(data);
-        if (id) return res.redirect('/reviews');
-        res.redirect('/reviews/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $9c0805fced9c045d$export$4a60180ddabce40).update(data.id, data);
-        if (id) return res.redirect('/reviews');
-        res.redirect('/reviews/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $9c0805fced9c045d$export$4a60180ddabce40).delete(req.params.id);
-        if (id) return res.redirect('/reviews');
-        res.redirect('/reviews');
+        super((0, $9c0805fced9c045d$export$4a60180ddabce40), 'reviews', {
+            title: 'Reviews',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -871,43 +624,15 @@ class $696bf945a17deb2e$export$2eb7ddb3bece450d extends (0, $720605a1bc090684$ex
 const $696bf945a17deb2e$export$b777f5716fd5b8aa = new $696bf945a17deb2e$export$2eb7ddb3bece450d();
 
 
-class $fe640b52042c74d7$export$85b16370280b2cde {
+
+class $fe640b52042c74d7$export$85b16370280b2cde extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const user_carts = await (0, $696bf945a17deb2e$export$b777f5716fd5b8aa).all();
-        res.json(user_carts);
-    }
-    async single(req, res) {
-        const user_cart = await (0, $696bf945a17deb2e$export$b777f5716fd5b8aa).find(req.params.id);
-        res.json(user_cart);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $696bf945a17deb2e$export$b777f5716fd5b8aa).create(data);
-        if (id) return res.redirect('/user_carts');
-        res.redirect('/user_carts/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $696bf945a17deb2e$export$b777f5716fd5b8aa).update(data.id, data);
-        if (id) return res.redirect('/user_carts');
-        res.redirect('/user_carts/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $696bf945a17deb2e$export$b777f5716fd5b8aa).delete(req.params.id);
-        if (id) return res.redirect('/user_carts');
-        res.redirect('/user_carts');
+        super((0, $696bf945a17deb2e$export$b777f5716fd5b8aa), 'user_carts', {
+            title: 'User Cart',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -919,43 +644,15 @@ class $ca22766d6553a6c6$export$b3c0c1ee34ee93f7 extends (0, $720605a1bc090684$ex
 const $ca22766d6553a6c6$export$cc0c03fe32419b66 = new $ca22766d6553a6c6$export$b3c0c1ee34ee93f7();
 
 
-class $4e9843b219380647$export$bbaba1d428ab2e6e {
+
+class $4e9843b219380647$export$bbaba1d428ab2e6e extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const roles = await (0, $ca22766d6553a6c6$export$cc0c03fe32419b66).all();
-        res.json(roles);
-    }
-    async single(req, res) {
-        const role = await (0, $ca22766d6553a6c6$export$cc0c03fe32419b66).find(req.params.id);
-        res.json(role);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $ca22766d6553a6c6$export$cc0c03fe32419b66).create(data);
-        if (id) return res.redirect('/roles');
-        res.redirect('/roles/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $ca22766d6553a6c6$export$cc0c03fe32419b66).update(data.id, data);
-        if (id) return res.redirect('/roles');
-        res.redirect('/roles/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $ca22766d6553a6c6$export$cc0c03fe32419b66).delete(req.params.id);
-        if (id) return res.redirect('/roles');
-        res.redirect('/roles');
+        super((0, $ca22766d6553a6c6$export$cc0c03fe32419b66), 'roles', {
+            title: 'Role',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -967,43 +664,15 @@ class $ffc8de37daf0e3ba$export$11cff731c6a94280 extends (0, $720605a1bc090684$ex
 const $ffc8de37daf0e3ba$export$c02d22b8d9fe1446 = new $ffc8de37daf0e3ba$export$11cff731c6a94280();
 
 
-class $850de351a0a6f25c$export$fd6acc083edcdaf2 {
+
+class $850de351a0a6f25c$export$fd6acc083edcdaf2 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const settings = await (0, $ffc8de37daf0e3ba$export$c02d22b8d9fe1446).all();
-        res.json(settings);
-    }
-    async single(req, res) {
-        const setting = await (0, $ffc8de37daf0e3ba$export$c02d22b8d9fe1446).find(req.params.id);
-        res.json(setting);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $ffc8de37daf0e3ba$export$c02d22b8d9fe1446).create(data);
-        if (id) return res.redirect('/settings');
-        res.redirect('/settings/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $ffc8de37daf0e3ba$export$c02d22b8d9fe1446).update(data.id, data);
-        if (id) return res.redirect('/settings');
-        res.redirect('/settings/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $ffc8de37daf0e3ba$export$c02d22b8d9fe1446).delete(req.params.id);
-        if (id) return res.redirect('/settings');
-        res.redirect('/settings');
+        super((0, $ffc8de37daf0e3ba$export$c02d22b8d9fe1446), 'settings', {
+            title: 'Setting',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -1015,43 +684,15 @@ class $f84d332d7e77676a$export$7989d652f1503155 extends (0, $720605a1bc090684$ex
 const $f84d332d7e77676a$export$56ff68ac21e4c288 = new $f84d332d7e77676a$export$7989d652f1503155();
 
 
-class $c260f1fb5b216be2$export$75bc3e97203775ec {
+
+class $c260f1fb5b216be2$export$75bc3e97203775ec extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const user_addresses = await (0, $f84d332d7e77676a$export$56ff68ac21e4c288).all();
-        res.json(user_addresses);
-    }
-    async single(req, res) {
-        const user_address = await (0, $f84d332d7e77676a$export$56ff68ac21e4c288).find(req.params.id);
-        res.json(user_address);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $f84d332d7e77676a$export$56ff68ac21e4c288).create(data);
-        if (id) return res.redirect('/user_addresses');
-        res.redirect('/user_addresses/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $f84d332d7e77676a$export$56ff68ac21e4c288).update(data.id, data);
-        if (id) return res.redirect('/user_addresses');
-        res.redirect('/user_addresses/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $f84d332d7e77676a$export$56ff68ac21e4c288).delete(req.params.id);
-        if (id) return res.redirect('/user_addresses');
-        res.redirect('/user_addresses');
+        super((0, $f84d332d7e77676a$export$56ff68ac21e4c288), 'user_addresses', {
+            title: 'User Addresses',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -1063,43 +704,15 @@ class $7e60c4b508b0431a$export$cd2a2086bdf7df44 extends (0, $720605a1bc090684$ex
 const $7e60c4b508b0431a$export$960506f80a268063 = new $7e60c4b508b0431a$export$cd2a2086bdf7df44();
 
 
-class $9ad52cf9d962b978$export$7ca75f83100ec00f {
+
+class $9ad52cf9d962b978$export$7ca75f83100ec00f extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const user_orders = await (0, $7e60c4b508b0431a$export$960506f80a268063).all();
-        res.json(user_orders);
-    }
-    async single(req, res) {
-        const user_order = await (0, $7e60c4b508b0431a$export$960506f80a268063).find(req.params.id);
-        res.json(user_order);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $7e60c4b508b0431a$export$960506f80a268063).create(data);
-        if (id) return res.redirect('/user_orders');
-        res.redirect('/user_orders/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $7e60c4b508b0431a$export$960506f80a268063).update(data.id, data);
-        if (id) return res.redirect('/user_orders');
-        res.redirect('/user_orders/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $7e60c4b508b0431a$export$960506f80a268063).delete(req.params.id);
-        if (id) return res.redirect('/user_orders');
-        res.redirect('/user_orders');
+        super((0, $7e60c4b508b0431a$export$960506f80a268063), 'user_orders', {
+            title: 'User Order',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -1111,43 +724,15 @@ class $c4e0266cf725159f$export$8444034b029dced4 extends (0, $720605a1bc090684$ex
 const $c4e0266cf725159f$export$76caacbd651f024f = new $c4e0266cf725159f$export$8444034b029dced4();
 
 
-class $d8c6cfd1048fc55d$export$a57c4a96ea0b64b9 {
+
+class $d8c6cfd1048fc55d$export$a57c4a96ea0b64b9 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const user_payments = await (0, $c4e0266cf725159f$export$76caacbd651f024f).all();
-        res.json(user_payments);
-    }
-    async single(req, res) {
-        const user_payment = await (0, $c4e0266cf725159f$export$76caacbd651f024f).find(req.params.id);
-        res.json(user_payment);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $c4e0266cf725159f$export$76caacbd651f024f).create(data);
-        if (id) return res.redirect('/user_payments');
-        res.redirect('/user_payments/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $c4e0266cf725159f$export$76caacbd651f024f).update(data.id, data);
-        if (id) return res.redirect('/user_payments');
-        res.redirect('/user_payments/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $c4e0266cf725159f$export$76caacbd651f024f).delete(req.params.id);
-        if (id) return res.redirect('/user_payments');
-        res.redirect('/user_payments');
+        super((0, $c4e0266cf725159f$export$76caacbd651f024f), 'user_payment', {
+            title: 'User Payment',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -1159,43 +744,15 @@ class $d3c3a27af4ebcfad$export$ea55741716e07e69 extends (0, $720605a1bc090684$ex
 const $d3c3a27af4ebcfad$export$13d41071d3344275 = new $d3c3a27af4ebcfad$export$ea55741716e07e69();
 
 
-class $47cce5d536fbcd1a$export$d3cb0d30dc2175d {
+
+class $47cce5d536fbcd1a$export$d3cb0d30dc2175d extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const user_reviews = await (0, $d3c3a27af4ebcfad$export$13d41071d3344275).all();
-        res.json(user_reviews);
-    }
-    async single(req, res) {
-        const user_reviews = await (0, $d3c3a27af4ebcfad$export$13d41071d3344275).find(req.params.id);
-        res.json(user_reviews);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $d3c3a27af4ebcfad$export$13d41071d3344275).create(data);
-        if (id) return res.redirect('/user_reviews');
-        res.redirect('/user_reviews/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $d3c3a27af4ebcfad$export$13d41071d3344275).update(data.id, data);
-        if (id) return res.redirect('/user_reviews');
-        res.redirect('/user_reviews/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $d3c3a27af4ebcfad$export$13d41071d3344275).delete(req.params.id);
-        if (id) return res.redirect('/user_reviews');
-        res.redirect('/user_reviews');
+        super((0, $d3c3a27af4ebcfad$export$13d41071d3344275), 'user_review', {
+            title: 'User Review',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -1207,43 +764,15 @@ class $e2705ed2cb4c7c69$export$7466c2af0c0ecfc4 extends (0, $720605a1bc090684$ex
 const $e2705ed2cb4c7c69$export$1d2f884bd9889e1 = new $e2705ed2cb4c7c69$export$7466c2af0c0ecfc4();
 
 
-class $b9be409835c328e6$export$55c658694035bdef {
+
+class $b9be409835c328e6$export$55c658694035bdef extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const userRoles = await (0, $e2705ed2cb4c7c69$export$1d2f884bd9889e1).all();
-        res.json(userRoles);
-    }
-    async single(req, res) {
-        const userRole = await (0, $e2705ed2cb4c7c69$export$1d2f884bd9889e1).find(req.params.id);
-        res.json(userRole);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $e2705ed2cb4c7c69$export$1d2f884bd9889e1).create(data);
-        if (id) return res.redirect('/userRoles');
-        res.redirect('/userRoles/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $e2705ed2cb4c7c69$export$1d2f884bd9889e1).update(data.id, data);
-        if (id) return res.redirect('/userRoles');
-        res.redirect('/userRoles/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $e2705ed2cb4c7c69$export$1d2f884bd9889e1).delete(req.params.id);
-        if (id) return res.redirect('/userRoles');
-        res.redirect('/userRoles');
+        super((0, $e2705ed2cb4c7c69$export$1d2f884bd9889e1), 'user_roles', {
+            title: 'User Roles',
+            asApi: true
+        });
     }
 }
-
 
 
 
@@ -1255,68 +784,48 @@ class $70c9e251e7d9b2ae$export$bd9fc755e1e606b6 extends (0, $720605a1bc090684$ex
 const $70c9e251e7d9b2ae$export$26ccf2496e669201 = new $70c9e251e7d9b2ae$export$bd9fc755e1e606b6();
 
 
-class $b96e9e74c65bdcb9$export$f197b856d17b2798 {
+
+class $b96e9e74c65bdcb9$export$f197b856d17b2798 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
     constructor(){
-        const route = (0, $3PGwM$express.Router)();
-        route.get('/', this.list);
-        route.get('/:id', this.single);
-        route.post('/', this.save);
-        route.put('/update/:id', this.update);
-        route.delete('/:id', this.delete);
-        return route;
-    }
-    async list(req, res) {
-        const user_wishlists = await (0, $70c9e251e7d9b2ae$export$26ccf2496e669201).all();
-        res.json(user_wishlists);
-    }
-    async single(req, res) {
-        const user_wishlist = await (0, $70c9e251e7d9b2ae$export$26ccf2496e669201).find(req.params.id);
-        res.json(user_wishlist);
-    }
-    async save(req, res) {
-        const data = req.body;
-        const id = await (0, $70c9e251e7d9b2ae$export$26ccf2496e669201).create(data);
-        if (id) return res.redirect('/user_wishlists');
-        res.redirect('/user_wishlists/create');
-    }
-    async update(req, res) {
-        const data = req.body;
-        const id = await (0, $70c9e251e7d9b2ae$export$26ccf2496e669201).update(data.id, data);
-        if (id) return res.redirect('/user_wishlists');
-        res.redirect('/user_wishlists/edit');
-    }
-    async delete(req, res) {
-        const id = await (0, $70c9e251e7d9b2ae$export$26ccf2496e669201).delete(req.params.id);
-        if (id) return res.redirect('/user_wishlists');
-        res.redirect('/user_wishlists');
+        super((0, $70c9e251e7d9b2ae$export$26ccf2496e669201), 'user_wishlists', {
+            title: 'User Wishlist',
+            asApi: true
+        });
     }
 }
 
 
-const $be9e254f217a7a93$var$route = (0, $3PGwM$express.Router)();
-const $be9e254f217a7a93$var$userController = new (0, $0ffe09501c96f62c$export$8bd653a33461d337)();
-$be9e254f217a7a93$var$userController.registerRoutes($be9e254f217a7a93$var$route, {
-    prefix: ''
-});
-// route.use('/users', new UserController());
-$be9e254f217a7a93$var$route.use('/carts', new (0, $e5328f9c26fc730a$export$41bd0aa259b8bd99)());
-$be9e254f217a7a93$var$route.use('/categories', new (0, $60cf312414915001$export$b19455c5574c398e)());
-$be9e254f217a7a93$var$route.use('/menus', new (0, $e504edb39c56c718$export$c0716dcad1882e32)());
-$be9e254f217a7a93$var$route.use('/orders', new (0, $8a56a44f19442c88$export$36c71b95759fd255)());
-$be9e254f217a7a93$var$route.use('/permissions', new (0, $e590532c03367ed3$export$f14414e4da36344a)());
-$be9e254f217a7a93$var$route.use('/posts', new (0, $502dd910a7620e20$export$c4018ffee86f7dfc)());
-$be9e254f217a7a93$var$route.use('/products', new (0, $94f9eec94a39dbcb$export$676eee9a3c69e247)());
-$be9e254f217a7a93$var$route.use('/reviews', new (0, $1fa3117e28a20169$export$aab409ec1c4f7d58)());
-$be9e254f217a7a93$var$route.use('/roles', new (0, $4e9843b219380647$export$bbaba1d428ab2e6e)());
-$be9e254f217a7a93$var$route.use('/settings', new (0, $850de351a0a6f25c$export$fd6acc083edcdaf2)());
-$be9e254f217a7a93$var$route.use('/user_addresses', new (0, $c260f1fb5b216be2$export$75bc3e97203775ec)());
-$be9e254f217a7a93$var$route.use('/user_carts', new (0, $fe640b52042c74d7$export$85b16370280b2cde)());
-$be9e254f217a7a93$var$route.use('/user_orders', new (0, $9ad52cf9d962b978$export$7ca75f83100ec00f)());
-$be9e254f217a7a93$var$route.use('/user_payments', new (0, $d8c6cfd1048fc55d$export$a57c4a96ea0b64b9)());
-$be9e254f217a7a93$var$route.use('/user_reviews', new (0, $47cce5d536fbcd1a$export$d3cb0d30dc2175d)());
-$be9e254f217a7a93$var$route.use('/user_Roles', new (0, $b9be409835c328e6$export$55c658694035bdef)());
-$be9e254f217a7a93$var$route.use('/user_wishlists', new (0, $b96e9e74c65bdcb9$export$f197b856d17b2798)());
-var $be9e254f217a7a93$export$2e2bcd8739ae039 = $be9e254f217a7a93$var$route;
+
+function $8db466f9314c631f$export$c520b57365708012(controllers) {
+    const router = (0, $3PGwM$express.Router)();
+    for (const object of controllers)object.registerRoutes(router);
+    return router;
+}
+
+
+const $be9e254f217a7a93$var$controllerObjects = [
+    new (0, $0ffe09501c96f62c$export$8bd653a33461d337)(),
+    new (0, $e5328f9c26fc730a$export$41bd0aa259b8bd99)(),
+    new (0, $60cf312414915001$export$b19455c5574c398e)(),
+    new (0, $e504edb39c56c718$export$c0716dcad1882e32)(),
+    new (0, $8a56a44f19442c88$export$36c71b95759fd255)(),
+    new (0, $e590532c03367ed3$export$f14414e4da36344a)(),
+    new (0, $502dd910a7620e20$export$c4018ffee86f7dfc)(),
+    new (0, $94f9eec94a39dbcb$export$676eee9a3c69e247)(),
+    new (0, $1fa3117e28a20169$export$aab409ec1c4f7d58)(),
+    new (0, $4e9843b219380647$export$bbaba1d428ab2e6e)(),
+    new (0, $850de351a0a6f25c$export$fd6acc083edcdaf2)(),
+    new (0, $c260f1fb5b216be2$export$75bc3e97203775ec)(),
+    new (0, $fe640b52042c74d7$export$85b16370280b2cde)(),
+    new (0, $9ad52cf9d962b978$export$7ca75f83100ec00f)(),
+    new (0, $d8c6cfd1048fc55d$export$a57c4a96ea0b64b9)(),
+    new (0, $47cce5d536fbcd1a$export$d3cb0d30dc2175d)(),
+    new (0, $b9be409835c328e6$export$55c658694035bdef)(),
+    new (0, $b96e9e74c65bdcb9$export$f197b856d17b2798)()
+];
+var // const userController = new UserController();
+// userController.registerRoutes(router);
+$be9e254f217a7a93$export$2e2bcd8739ae039 = (0, $8db466f9314c631f$export$c520b57365708012)($be9e254f217a7a93$var$controllerObjects);
 
 
 
