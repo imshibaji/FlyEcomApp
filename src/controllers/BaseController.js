@@ -155,6 +155,7 @@ export default class BaseController {
     const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
     if (isApi) return res.json({ success: true, message: `${this.title} created`, data: savedData });
 
+    req.session.flash = `${this.title} created`;
     res.redirect(`/${this.viewPrefix}/${this.resource}`);
   }
 
@@ -169,7 +170,7 @@ export default class BaseController {
 
     const updated = await this.model.update(data.id, data);
     // if (updated.error) return res.json({ success: false, message: updated.error });
-    console.log(updated);
+    // console.log(updated);
     
     const updatedData = await this.model.find(data.id);
     this.pushStreamData({ event: 'update', data: updatedData });
@@ -177,6 +178,7 @@ export default class BaseController {
     const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
     if (isApi) return res.json({ success: true, message: `${this.title} updated`, data: updatedData });
 
+    req.session.flash = `${this.title} updated`;
     res.redirect(`/${this.viewPrefix}/${this.resource}`);
   }
 
@@ -187,9 +189,10 @@ export default class BaseController {
     await this.model.delete(req.params.id);
     this.pushStreamData({ event: 'delete', id: req.params.id });
 
-    const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+    const isApi = req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
     if (isApi) return res.json({ success: true, message: `${this.title} deleted` });
 
+    req.session.flash = `${this.title} deleted`;
     res.redirect(`/${this.viewPrefix}/${this.resource}`);
   }
 }

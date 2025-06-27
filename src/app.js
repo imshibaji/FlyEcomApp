@@ -1,5 +1,8 @@
 import createError from 'http-errors';
 import express from 'express';
+import cookieParser from 'cookie-parser';
+import cookieSession from 'cookie-session';
+import methodOverride from 'method-override';
 // import indexRoutes from './routes/index';
 import FrontController from './controllers/FrontController';
 import UserController from './controllers/UserController';
@@ -14,6 +17,26 @@ app.set('views','views');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
+
+// Session Setup
+app.use(cookieParser());
+app.set('trust proxy', 1); // trust first proxy
+app.use(cookieSession({
+    name: 'session',
+    keys: ['Set cookie key'],
+    overwrite: true,
+    // Cookie Options
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
+
+app.use((req, res, next) => {
+    res.locals.user = req.session.user;
+    res.locals.flash = req.session.flash || null;
+    delete req.session.flash;
+    next();
+});
+
+app.use(methodOverride('_method'));
 
 // Register Path
 app.use('/', new FrontController());

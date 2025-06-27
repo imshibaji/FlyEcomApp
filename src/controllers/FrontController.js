@@ -10,18 +10,21 @@ export default class FrontController{
     }
 
     home(req, res){
+        req.session.flash = 'Home Page';
         res.render('index', {
             title: 'My App'
         });
     }
 
     about(req, res){
+        req.session.flash = 'About Page';
         res.render('index',{
             title: 'About'
         });
     }
 
     contact(req, res){
+        req.session.flash = 'Contact Page';
         res.render('index',{
             title: 'Contact'
         });

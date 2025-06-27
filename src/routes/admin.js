@@ -21,7 +21,9 @@ route.use('/menu', new MenuController());
 route.use('/categories', new CategoryController());
 route.use('/products', new ProductController());
 route.use('/orders', new OrderController());
-route.use('/users', new UserController());
+// route.use('/users', new UserController());
+const user = new UserController();
+user.registerRoutes(route);
 route.use('/settings', new SettingController());
 
 export default route;

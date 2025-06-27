@@ -23,7 +23,7 @@ block content
                     td=user.mobile
                     td
                         .btn-group
-                            a.btn.btn-info.p-3(href='/admin/users/show/'+user.id) Show
-                            a.btn.btn-warning.p-3(href='/admin/users/edit/'+user.id) Edit
-                            form.btn.btn-danger(action='/admin/users/delete/'+user.id, method="post") 
+                            a.btn.btn-info.p-3(href='/admin/users/'+user.id) Show
+                            a.btn.btn-warning.p-3(href='/admin/users/'+user.id+'/edit') Edit
+                            form.btn.btn-danger(action='/admin/users/'+user.id+'/delete?_method=delete', method="post") 
                                 button.btn.btn-none(type='submit') Delete

@@ -1,7 +1,14 @@
 import { Router } from "express";
 import { userModel } from "../../models/User.js";
-import { BaseController } from "./BaseController.js";
+import BaseController from "../BaseController.js";
+// import { BaseController } from "./BaseController.js";
+
 export default class UserController extends BaseController{
+    constructor(){
+        super(userModel,'users', {
+            title: 'Users',
+        });
+    }
     // constructor(){
     //     const route = Router();
     //     route.get('/', this.list);
@@ -14,47 +21,51 @@ export default class UserController extends BaseController{
     //     return route;
     // }
 
-    async list(req, res){
-        const users = await userModel.all();
-        res.render('admin/users/index', {users, title: 'Users Section'});
-    }
+    // async list(req, res){
+    //     const users = await userModel.all();
 
-    async show(req, res){
-        const user = await userModel.find(req.params.id);
-        res.render('admin/users/show', {user, title: 'User Details'});
-    }
+    //     res.render('admin/users/index', {users, title: 'Users Section'});
+    // }
 
-    async create(req, res){
-        res.render('admin/users/create', {title: 'Create User'});
-    }
+    // async show(req, res){
+    //     const user = await userModel.find(req.params.id);
+    //     res.render('admin/users/show', {user, title: 'User Details'});
+    // }
 
-    async save(req, res){
-        const user = req.body;
-        const img = req.file;
-        console.log(img);
+    // async create(req, res){
+    //     res.render('admin/users/create', {title: 'Create User'});
+    // }
+
+    // async save(req, res){
+    //     const user = req.body;
+    //     const img = req.file;
+    //     console.log(img);
         
-        delete user.image;
-        await userModel.create(user);
-        res.redirect('/admin/users');
-    }
+    //     delete user.image;
+    //     await userModel.create(user);
+    //     req.session.flash = 'User created';
+    //     res.redirect('/admin/users');
+    // }
 
-    async edit(req, res){
-        const user = await userModel.find(req.params.id);
-        res.render('admin/users/edit', {user, title: 'Edit User'});
-    }
+    // async edit(req, res){
+    //     const user = await userModel.find(req.params.id);
+    //     res.render('admin/users/edit', {user, title: 'Edit User'});
+    // }
 
-    async update(req, res){
-        const user = req.body;
-        const img = req.file;
-        console.log(img);
-        delete user.image;
-        await userModel.update(user.id, user);
-        res.redirect('/admin/users');
-    }
+    // async update(req, res){
+    //     const user = req.body;
+    //     const img = req.file;
+    //     console.log(img);
+    //     delete user.image;
+    //     await userModel.update(user.id, user);
+    //     req.session.flash = 'User updated';
+    //     res.redirect('/admin/users');
+    // }
 
-    async delete(req, res){
-        await userModel.delete(req.params.id);
-        res.redirect('/admin/users');
-    }
+    // async delete(req, res){
+    //     await userModel.delete(req.params.id);
+    //     req.session.flash = 'User deleted';
+    //     res.redirect('/admin/users');
+    // }
 
 }

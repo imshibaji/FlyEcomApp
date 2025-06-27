@@ -5,6 +5,7 @@ export default class CategoryController extends BaseController{
 
     async list(req, res){
         const categories = await categoryModel.all();
+        req.session.flash = 'Categories';
         res.render('admin/categories/index', {categories, title: 'Categories Section'});
     }
 

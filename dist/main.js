@@ -1,5 +1,8 @@
 var $3PGwM$httperrors = require("http-errors");
 var $3PGwM$express = require("express");
+var $3PGwM$cookiesession = require("cookie-session");
+var $3PGwM$cookieparser = require("cookie-parser");
+var $3PGwM$methodoverride = require("method-override");
 var $3PGwM$knex = require("knex");
 var $3PGwM$multer = require("multer");
 var $3PGwM$path = require("path");
@@ -12,6 +15,9 @@ function $parcel$interopDefault(a) {
 
 
 
+
+
+
 class $5c59ea4c8355861e$export$2e2bcd8739ae039 {
     constructor(){
         const route = (0, $3PGwM$express.Router)();
@@ -21,16 +27,19 @@ class $5c59ea4c8355861e$export$2e2bcd8739ae039 {
         return route;
     }
     home(req, res) {
+        req.session.flash = 'Home Page';
         res.render('index', {
             title: 'My App'
         });
     }
     about(req, res) {
+        req.session.flash = 'About Page';
         res.render('index', {
             title: 'About'
         });
     }
     contact(req, res) {
+        req.session.flash = 'Contact Page';
         res.render('index', {
             title: 'Contact'
         });
@@ -307,19 +316,19 @@ class $d9c71b4f8cb1b933$export$2e2bcd8739ae039 {
         router.delete(`${base}/:id/delete`, this.delete.bind(this));
     }
     // Smart render with JSON fallback
-    async render(req, res, view, data1) {
-        const isApi = data1.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+    async render(req, res, view, data) {
+        const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
         if (isApi) return res.json({
             success: true,
-            data: data1
+            data: data
         });
         try {
-            res.render(view, data1);
+            res.render(view, data);
         } catch (err) {
             if (err.message.includes('Failed to lookup view')) res.json({
                 success: true,
                 viewFallback: true,
-                data: data1
+                data: data
             });
             else throw err;
         }
@@ -334,8 +343,8 @@ class $d9c71b4f8cb1b933$export$2e2bcd8739ae039 {
         });
     }
     // Push data to all live SSE clients
-    pushStreamData(data1) {
-        const payload = `data: ${JSON.stringify(data1)}\n\n`;
+    pushStreamData(data) {
+        const payload = `data: ${JSON.stringify(data)}\n\n`;
         for (const res of this.streamClients)try {
             res.write(payload);
         } catch (err) {
@@ -391,43 +400,45 @@ class $d9c71b4f8cb1b933$export$2e2bcd8739ae039 {
         });
     }
     async save(req, res) {
-        const data1 = req.body;
-        if (req.file) data1.image = `/uploads/${req.file.filename}`;
-        const result = await this.model.create(data1);
+        const data = req.body;
+        if (req.file) data.image = `/uploads/${req.file.filename}`;
+        const result = await this.model.create(data);
         const savedData = await this.model.find(result.id);
         this.pushStreamData({
             event: 'create',
             data: savedData
         });
-        const isApi = data1.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+        const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
         if (isApi) return res.json({
             success: true,
             message: `${this.title} created`,
             data: savedData
         });
+        req.session.flash = `${this.title} created`;
         res.redirect(`/${this.viewPrefix}/${this.resource}`);
     }
     async update(req, res) {
-        const data1 = req.body;
-        const existing = await this.model.find(data1.id);
+        const data = req.body;
+        const existing = await this.model.find(data.id);
         if (req.file) {
             if (existing?.image) this.deleteFileIfExists(existing.image);
-            data1.image = `/uploads/${req.file.filename}`;
+            data.image = `/uploads/${req.file.filename}`;
         }
-        const updated = await this.model.update(data1.id, data1);
+        const updated = await this.model.update(data.id, data);
         // if (updated.error) return res.json({ success: false, message: updated.error });
-        console.log(updated);
-        const updatedData = await this.model.find(data1.id);
+        // console.log(updated);
+        const updatedData = await this.model.find(data.id);
         this.pushStreamData({
             event: 'update',
             data: updatedData
         });
-        const isApi = data1.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+        const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
         if (isApi) return res.json({
             success: true,
             message: `${this.title} updated`,
             data: updatedData
         });
+        req.session.flash = `${this.title} updated`;
         res.redirect(`/${this.viewPrefix}/${this.resource}`);
     }
     async delete(req, res) {
@@ -438,11 +449,12 @@ class $d9c71b4f8cb1b933$export$2e2bcd8739ae039 {
             event: 'delete',
             id: req.params.id
         });
-        const isApi = data.asApi === true || req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
+        const isApi = req.query.asApi === 'true' || req.headers.accept?.includes('application/json') || this.asApi;
         if (isApi) return res.json({
             success: true,
             message: `${this.title} deleted`
         });
+        req.session.flash = `${this.title} deleted`;
         res.redirect(`/${this.viewPrefix}/${this.resource}`);
     }
 }
@@ -832,6 +844,17 @@ $be9e254f217a7a93$export$2e2bcd8739ae039 = (0, $8db466f9314c631f$export$c520b573
 
 
 
+class $8a3073f4302cde34$export$2e2bcd8739ae039 extends (0, $d9c71b4f8cb1b933$export$2e2bcd8739ae039) {
+    constructor(){
+        super((0, $e79cae0f6706b914$export$54582e7b17f0fab7), 'users', {
+            title: 'Users'
+        });
+    }
+}
+
+
+
+
 
 const $0a13916f247d137d$var$upload = (0, ($parcel$interopDefault($3PGwM$multer)))({
     dest: 'public/uploads/'
@@ -856,69 +879,6 @@ class $0a13916f247d137d$export$3b5bd9381a52554c {
     async update() {}
     async delete() {}
 }
-
-
-class $8a3073f4302cde34$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
-    // constructor(){
-    //     const route = Router();
-    //     route.get('/', this.list);
-    //     route.get('/show/:id', this.show);
-    //     route.get('/create', this.create);
-    //     route.post('/', this.save);
-    //     route.get('/edit/:id', this.edit);
-    //     route.post('/update', this.update);
-    //     route.post('/delete/:id', this.delete);
-    //     return route;
-    // }
-    async list(req, res) {
-        const users = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).all();
-        res.render('admin/users/index', {
-            users: users,
-            title: 'Users Section'
-        });
-    }
-    async show(req, res) {
-        const user = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).find(req.params.id);
-        res.render('admin/users/show', {
-            user: user,
-            title: 'User Details'
-        });
-    }
-    async create(req, res) {
-        res.render('admin/users/create', {
-            title: 'Create User'
-        });
-    }
-    async save(req, res) {
-        const user = req.body;
-        const img = req.file;
-        console.log(img);
-        delete user.image;
-        await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).create(user);
-        res.redirect('/admin/users');
-    }
-    async edit(req, res) {
-        const user = await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).find(req.params.id);
-        res.render('admin/users/edit', {
-            user: user,
-            title: 'Edit User'
-        });
-    }
-    async update(req, res) {
-        const user = req.body;
-        const img = req.file;
-        console.log(img);
-        delete user.image;
-        await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).update(user.id, user);
-        res.redirect('/admin/users');
-    }
-    async delete(req, res) {
-        await (0, $e79cae0f6706b914$export$54582e7b17f0fab7).delete(req.params.id);
-        res.redirect('/admin/users');
-    }
-}
-
-
 
 
 class $2daee833097940d0$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
@@ -999,6 +959,7 @@ class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$exp
     // }
     async list(req, res) {
         const products = await (0, $ae7c6e3668f66242$export$e7624ed1afe99528).all();
+        req.session.flash = 'Products';
         res.render('admin/products/index', {
             products: products,
             title: 'Products Section'
@@ -1056,6 +1017,7 @@ class $dbcf8bf34f1387b5$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$exp
 class $25551fd63e04c47d$export$2e2bcd8739ae039 extends (0, $0a13916f247d137d$export$3b5bd9381a52554c) {
     async list(req, res) {
         const categories = await (0, $c3cc1681a3def845$export$a2705413a9011472).all();
+        req.session.flash = 'Categories';
         res.render('admin/categories/index', {
             categories: categories,
             title: 'Categories Section'
@@ -1209,7 +1171,9 @@ $4a244960c6409d39$var$route.use('/menu', new (0, $db715ed7f7b3e677$export$2e2bcd
 $4a244960c6409d39$var$route.use('/categories', new (0, $25551fd63e04c47d$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/products', new (0, $dbcf8bf34f1387b5$export$2e2bcd8739ae039)());
 $4a244960c6409d39$var$route.use('/orders', new (0, $2daee833097940d0$export$2e2bcd8739ae039)());
-$4a244960c6409d39$var$route.use('/users', new (0, $8a3073f4302cde34$export$2e2bcd8739ae039)());
+// route.use('/users', new UserController());
+const $4a244960c6409d39$var$user = new (0, $8a3073f4302cde34$export$2e2bcd8739ae039)();
+$4a244960c6409d39$var$user.registerRoutes($4a244960c6409d39$var$route);
 $4a244960c6409d39$var$route.use('/settings', new (0, $ef023f9b523d0dc7$export$2e2bcd8739ae039)());
 var $4a244960c6409d39$export$2e2bcd8739ae039 = $4a244960c6409d39$var$route;
 
@@ -1222,6 +1186,25 @@ $298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$express))).urle
     extended: false
 }));
 $298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$express))).static('public'));
+// Session Setup
+$298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$cookieparser)))());
+$298ad17b2ba72143$var$app.set('trust proxy', 1); // trust first proxy
+$298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$cookiesession)))({
+    name: 'session',
+    keys: [
+        'Set cookie key'
+    ],
+    overwrite: true,
+    // Cookie Options
+    maxAge: 86400000 // 24 hours
+}));
+$298ad17b2ba72143$var$app.use((req, res, next)=>{
+    res.locals.user = req.session.user;
+    res.locals.flash = req.session.flash || null;
+    delete req.session.flash;
+    next();
+});
+$298ad17b2ba72143$var$app.use((0, ($parcel$interopDefault($3PGwM$methodoverride)))('_method'));
 // Register Path
 $298ad17b2ba72143$var$app.use('/', new (0, $5c59ea4c8355861e$export$2e2bcd8739ae039)());
 $298ad17b2ba72143$var$app.use('/admin', (0, $4a244960c6409d39$export$2e2bcd8739ae039));

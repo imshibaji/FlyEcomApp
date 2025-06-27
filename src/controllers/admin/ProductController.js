@@ -17,6 +17,7 @@ export default class ProductController extends BaseController{
 
     async list(req, res){
         const products = await productModel.all();
+        req.session.flash = 'Products';
         res.render('admin/products/index', {products, title: 'Products Section'});
     }
 
